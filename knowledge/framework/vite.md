@@ -124,3 +124,9 @@ Vite HMR 可能带来的问题？
 - webpack 的打包流程: 读取配置 → 创建 Compiler → 从入口构建依赖图 → Loader 转换模块 → Plugin 优化 → 生成 Chunk → 输出文件。
 
 - vite 开发时走原生 ESM + 按需编译，而生产环境走 Rollup 打包。vite 打包流程: 配置解析 -> 调用 Rollup 构建 -> 优化处理 -> 产物生成
+
+
+### 其他
+
+- webpack 打包速度分析, speed-measure-webpack-plugin, 打包大小分析: webpack-bundle-analyze
+- 安装相同的但不同版本的组件库, 取别名 npm i alias@npm:name@^verison
