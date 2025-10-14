@@ -871,6 +871,78 @@ react-i18next 使用 Context + Hook，组件通过 useTranslation() 获取翻译
 
 </Collapse>
 
+### 28.Redux Toolkit
+
+<Collapse>
+
+1. createSlice 内部用 Immer，允许你写“可变写法”，但底层会生成不可变的新 state。
+2. createAsyncThunk 内部是如何工作的？
+   - 生成一个 thunk action（函数），会在调用时触发一个 生命周期三段式：
+      - pending → 异步任务开始
+      - fulfilled → 异步任务成功
+      - rejected → 异步任务失败
+   - 内部用 dispatch 多次派发 action，而不是只派发一次。
+
+3.Redux Toolkit 如何优化性能
+    - 1.内置 Immer + useSelector 的 浅比较，减少无效渲染。
+    - 2.createEntityAdapter 提供规范化数据结构（normalized state），避免深层次 diff。
+    - 3. 配合 memo / useMemo / useCallback，只渲染必要组件。
+
+4. 如果要在 Redux Toolkit 里实现一个 Undo/Redo 功能，怎么做？
+    - 在 reducer 里维护一个 past[]、present、future[] 三段式结构。
+    - 每次 dispatch：把当前 present 推入 pastpresent 替换为新 state
+    - Undo → 从 past 弹出最后一个到 present，并把原先的 present 推入 future
+
+</Collapse>
+
+### 29. react usestate usereducer useref useeffece 原理
+
+<Collapse>
+
+环形队列就是：链表的最后一个节点的 next 指针 指向头节点，形成一个环。
+
+- useState 的原理
+  - 原理可以拆解成三个部分：状态保存、状态更新 和 触发渲染。 useState 把状态保存在 Fiber 的 Hook 链表中，setState 通过更新队列记录变化，并触发 Fiber 的调度和重新渲染，最终在下一次执行组件时计算出新状态。
+  -  React 为什么需要 useState: 在函数组件里，普通的局部变量在函数执行完后会被销毁。React 通过 useState 把状态存放在 Fiber 节点 上，这样每次函数组件重新执行时，状态不会丢失。
+  - 状态保存原理: 每个组件对应一个 Fiber 节点。Fiber 上有一个 memoizedState 属性，存储链表结构，保存多个 Hook 的状态。
+  - 状态更新原理: 调用 setState 时, 会创建一个 更新对象, 放到对应 Hook 的更新队列里, 然后 React 会调度一次 组件重新渲染
+  - 触发渲染机制: setState 本质上调用了 React 的 调度器，会标记当前 Fiber 为需要更新，然后触发一次 Fiber 调度 → Diff → commit → 重新渲染 流程。
+
+- usereducer原理
+  - useState 的原理一样, 是把状态更新逻辑抽出来交给 reducer 函数. 其实 React 内部 useState 就是 useReducer 的语法糖。
+  - useReducer 本质上和 useState 一样，状态保存在 Fiber Hook 链表里，更新通过环形队列记录；不同的是，它通过 reducer(state, action) 把更新逻辑交给用户，让状态更新更可控。
+```
+function useState(initialState) {
+    return useReducer((state, action) => {
+        return typeof action === 'function' ? action(state) : action;
+    }, initialState);
+}
+```
+
+- useRef 原理
+  - useRef 的作用就是：给你一个不会变的“盒子”来存放东西。
+  - 和其他 Hooks 一样，useRef 也存放在 Fiber 的 Hook 链表里。 不同点在于：初次渲染时，React 会创建一个对象 { current: initialValue }，并保存到 memoizedState。之后的渲染，直接返回同一个对象。
+  - 每次调用 useRef，拿到的都是同一个对象引用；修改 .current 不会触发渲染，因为 React 不会监听这个值的变化。
+
+- useeffece 原理
+  - React 提供 useEffect，把这些副作用挂到 Fiber 的副作用链表，在 DOM 更新提交之后 执行。(commit 阶段执行)
+  - 可以分成三个阶段: 初次渲染, 提交阶段, 更新渲染
+    - updateQueue（effect 链表）
+    - layoutEffect（同步执行）：在 DOM 更新后，浏览器绘制之前执行（会阻塞渲染）。
+    - effect（即 useEffect）（异步执行）：在浏览器完成绘制后执行，不会阻塞渲染
+  - useEffect 的原理就是：在渲染时收集副作用，存到 Fiber 的effect链表；在commit阶段统一执行，并根据依赖数组判断是否需要重新运行，同时处理清理函数。
+
+
+
+
+
+
+
+
+
+</Collapse>
+
+
 ### 其他
 
 - Immer 基于 Proxy（代理）拦截所有修改操作
