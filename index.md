@@ -5,7 +5,7 @@ layout: home
 hero:
   name: "个人知识库"
   text: ""
-  tagline: 读书笔记, 学习记录, 面试真题, web安全
+  tagline: 读书笔记, 学习记录, 框架原理, 面试真题, web安全
   actions:
     - theme: brand
       text: 开始
