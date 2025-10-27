@@ -21,6 +21,7 @@ export default defineConfig({
         items: [
           { text: "js", link: "/knowledge/base/js" },
           { text: "node", link: "/knowledge/base/nodejs" },
+          { text: "css", link: "/knowledge/base/css" },
         ],
       },
 

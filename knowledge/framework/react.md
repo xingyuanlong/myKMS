@@ -1,3 +1,4 @@
+# react
 
 ### 1. react尽量不要再内部定义组件
 
@@ -838,14 +839,17 @@ React 渲染分为两阶段：Render 阶段负责根据 props 和 state 生成�
 
 i18n 实现国际化
 
-
 1. 动态语言切换 + 按需加载
+
   - 动态import+映射表,页面级组件在useEffect或路由加载时调用i18n.addResources(),减少初始打包体积，提高首屏加载速度, 使用缓存(localStorage / IndexedDB)
 2. 日期/时间/数字/货币格式化
+
 3. 自动提取翻译 Key & 多语言管理
   - i18next-scanner 扫描
+
 4. i18n + 路由（多语言 URL）
   - :lang 作为路由参数, 配合effect, navigate loadLanguage实现
+  
 5. i18n 国际化对 React 组件性能的影响？如何优化？
     - react-i18next 会在语言切换时触发重新渲染依赖翻译的组件: 精准使用 useTranslation('namespace')(语言文件可以按 namespace 划分)，避免全局组件不必要渲染;
     - Trans 组件只包裹需要翻译的部分;
@@ -932,15 +936,46 @@ function useState(initialState) {
     - effect（即 useEffect）（异步执行）：在浏览器完成绘制后执行，不会阻塞渲染
   - useEffect 的原理就是：在渲染时收集副作用，存到 Fiber 的effect链表；在commit阶段统一执行，并根据依赖数组判断是否需要重新运行，同时处理清理函数。
 
+</Collapse>
 
 
+### 30. react useEffect 依赖项为数据或者对象, 如何处理
+
+<Collapse>
 
 
+当 useEffect 的依赖项是数组或对象时，你可能会遇到一个陷阱：useEffect 会在每次组件重新渲染时都执行，即使数组或对象的内容“看起来”没有变化.
 
+React 组件每次重新渲染时，在函数体内部定义的对象或数组都会被重新创建一个新的实例。比较时Object.is 始终为false,因此 effect 会重新执行
 
+方案一：解构原始值 (Destructuring Primitives)
+  - 取只关心其中的某些原始值
 
+方案二：使用 useMemo 稳定引用 (Memoization)
+  - useMemo 会缓存这个对象/数组，只有当 useMemo 自己的依赖项改变时，它才会重新创建一个新的对象/数组。
+
+方案三：序列化为字符串 (Stringification)
+  - 把它们转换成一个 JSON 字符串，因为字符串是原始值。
+
+方案四：使用自定义 Hook (Deep Compare)
+  - 创建一个自定义 Hook（例如 useRef）来存储前一个值，并在 useEffect 内部手动进行“深度比较”。
 
 </Collapse>
+
+### 31. jsx 为什么只允许有一个父节点
+
+<Collapse>
+
+**因为 JSX 最终会被编译成 JavaScript 函数调用，而 JavaScript 的函数一次只能返回一个值。**
+
+核心原理：JSX 是 React.createElement() 的语法糖.
+
+你写的 JSX 代码并不会直接在浏览器中运行。它需要一个转译器（最常见的是 Babel）将其转换为浏览器能理解的纯 JavaScript。
+在 React 中，你写的每一段 JSX 标签都会被转译成一个 React.createElement(component, props, ...children) 函数调用
+这个函数调用的返回值是一个 JavaScript 对象（用来描述你想要创建的 UI，也就是 React 元素或“虚拟 DOM”节点）
+
+</Collapse>
+
 
 
 ### 其他
@@ -1042,3 +1077,42 @@ function useState(initialState) {
   React18 之后默认开启 自动批处理（Automatic Batching）：即使在 setTimeout / Promise.then 里，也会合并 setState.除非显式调用 ReactDOM.flushSync()，否则 React 都会尝试延迟合并更新。
   flushSync 可以强制同步
 
+- React 实现“视口内才加载”?
+```
+
+import React, { useEffect, useState, Suspense } from 'react';
+
+const LazyChart = React.lazy(() => import('./BigChart'));
+
+export default function Page() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = document.getElementById('chart-container');
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setVisible(true);
+        observer.disconnect();
+      }
+    });
+    if (el) observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <div id="chart-container" style={{ minHeight: 400 }}>
+        {visible ? (
+          <Suspense fallback={<div>Loading chart...</div>}>
+            <LazyChart />
+          </Suspense>
+        ) : (
+          <div>Chart will load when visible...</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+```

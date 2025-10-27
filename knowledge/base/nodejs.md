@@ -1,5 +1,7 @@
 ### 1.Node 中 require 时发生了什么? 
 
+<Collapse>
+
 路径解析 => 缓存检查 => 创建模块对象 => 读取与编译 => 执行模块代码 => 标记完成并返回
 
 require() 缓存检查顺序：
@@ -8,9 +10,11 @@ require() 缓存检查顺序：
    - 3. 如果缓存未命中 → 走模块解析; 
    - 4. 执行模块，填充 require.cache，返回 module.exports。
 
+</Collapse>
 
 ### 2.Node.js 事件循环机制
 
+<Collapse>
 
 六个阶段: 
 1. Timers（计时器阶段）执行 setTimeout() 和 setInterval() 的回调
@@ -38,13 +42,22 @@ require() 缓存检查顺序：
 - 线程池 用于无法立即非阻塞完成的工作（默认线程数 ≈4，可通过 UV_THREADPOOL_SIZE 设置）。
 - 不要阻塞 主线程，必要时用 worker_threads 或外部服务/进程。
 
+</Collapse>
+
 ### 3.process.nextTick 与 setTimeout 的区别
+
+<Collapse>
 
 - process.nextTick 在当前事件循环结束时执行
 - setTimeout(fn, 0) 在下一个事件循环开始时执行
 - nextTick 优先级更高
 
+</Collapse>
+
+
 ### 4.Koa 与 Express 的区别
+
+<Collapse>
 
 1. 中间件机制
 
@@ -86,7 +99,13 @@ require() 缓存检查顺序：
 - Express：适合快速开发，现有项目迁移，团队熟悉度高
 - Koa：适合追求优雅代码，需要更好的异步流程控制的场景
 
+</Collapse>
+
+
+
 ### 5.JWT 如何自动更新 token
+
+<Collapse>
 
 采用JWT 双 Token 模式：Access Token + Refresh Token
 | 类型                | 作用                  | 有效期          | 存储位置                          |
@@ -128,8 +147,11 @@ require() 缓存检查顺序：
     - 刷新限流
         - 对同一个用户的刷新操作设置时间间隔限制（例如 5 秒内只允许一次刷新）
 
+</Collapse>
 
 ### 6.扫描登录如何实现?
+
+<Collapse>
 
 PC浏览器 <———> 服务器 <———> 手机App
 
@@ -154,6 +176,8 @@ PC浏览器 <———> 服务器 <———> 手机App
 - 浏览器登录成功
     - 前端拿到 token（如JWT），存入 Cookie / LocalStorage
     - 重定向到首页，登录完成
+
+</Collapse>
 
 ### 其他
 

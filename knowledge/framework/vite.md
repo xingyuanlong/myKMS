@@ -49,6 +49,53 @@ Tree Shaking = 静态分析 + dead code elimination
   - 动态 import 可以按需加载，但静态分析更高效; 
   - 类库打包方式影响 Tree Shaking(lodash/es → 支持 Tree Shaking,lodash → CommonJS，不支持)
 
+
+### 4. Tree Shaking 对 css 有效吗
+
+<Collapse>
+- 纯 CSS 文件
+   - Tree Shaking 无法分析哪些 CSS 类使用或未使用
+   - 所以 未使用的 CSS 默认不会被移除
+- CSS-in-JS / CSS Module
+   - CSS-in-JS（如 styled-components, emotion）生成的 JS 代码
+   - 对未使用的 styled 组件，Webpack/Rollup 的 Tree Shaking 可以删除对应 JS，从而间接删除样式
+   - 但这需要 样式写在 JS 里，纯 CSS 文件不适用
+
+- tailwind / PostCSS / PurgeCSS
+  - 对于类名型 CSS（如 Tailwind、Bootstrap）
+  - 可以使用工具 扫描项目源码，删除未使用类
+  - 原理类似 Tree Shaking，但实际上是 静态 CSS 去重，不依赖 JS Tree Shaking
+
+</Collapse>
+
+### 5. webpack runtime 是啥
+
+<Collapse>
+
+**webpack runtime = 浏览器端的模块管理器 + 动态加载器 + 缓存器**
+
+webpack 为了在浏览器执行模块打包后的代码而生成的一套加载、执行、管理模块的核心逻辑。
+
+负责:
+- 加载模块 (__webpack_require__)
+  - 核心加载器，用来执行模块函数并返回 exports
+  - 每个模块在打包后都变成一个函数 (module, exports, __webpack_require__) => { … }
+- 缓存模块
+  - webpack 会把每个模块的执行结果缓存，避免重复执行：
+- 支持动态 import / chunk 加载
+  - JSONP 或 Module Federation  加载
+  - chunk 加载状态表
+- 处理热更新（HMR）
+  - 监听更新的 chunk；
+  - 动态替换模块内容，不刷新页面
+
+
+
+
+</Collapse>
+
+
+
 ---
 
 ## vite
@@ -98,6 +145,7 @@ Vite HMR 可能带来的问题？
 </Collapse>
 
 
+
 ### .Webpack 与 Vite
 
 | 对比项              | **Webpack**                                     | **Vite**                                      |
@@ -125,8 +173,82 @@ Vite HMR 可能带来的问题？
 
 - vite 开发时走原生 ESM + 按需编译，而生产环境走 Rollup 打包。vite 打包流程: 配置解析 -> 调用 Rollup 构建 -> 优化处理 -> 产物生成
 
+### ssr 是啥, 对比csr的优势和适用场景
+
+<Collapse>
+
+SSR（Server-Side Rendering） 是指在服务器端生成 HTML 内容，再发送到浏览器渲染，而不是浏览器端通过 JS 生成 DOM。
+
+SSR 的核心实现原理:
+SSR 的核心在于“同构（Isomorphic）”或“通用（Universal）”应用——即一套代码（通常是 React, Vue, Svelte 等）既能在服务器上运行，也能在客户端上运行。
+
+核心实现流程如下：
+
+1. 请求到达服务器
+
+2. 服务器端路由与数据获取
+
+  - 路由匹配: 服务器根据请求的 URL 匹配到对应的页面组件
+  - 数据预取: 服务器在渲染组件之前，会执行该页面组件定义的“服务器端数据获取函数”（例如 Next.js 中的 getServerSideProps）。它会去调用数据库或 API，获取 ID 为 123 的产品数据。
+
+3. 服务器端渲染（Render to String）
+
+  - 服务器使用框架提供的服务器端渲染 API（例如 React 的 ReactDOMServer.renderToString()）来“执行”组件。
+  - 由于在第 2 步已经获取了数据，组件会被填充完整的数据（产品名称、价格、描述等）。
+  - 这个执行过程的产物不是一个虚拟 DOM，而是一个完整的 HTML 字符串。
+
+4. 响应与首次渲染
+  - 服务器将这个完整的 HTML 字符串打包成一个 HTTP 响应，发送给浏览器。
+  - 浏览器接收到 HTML 后，立即解析并渲染。用户此时立刻就能看到页面的完整内容（这就是首屏加载极快的原因）。
+  - 注意：此时的页面只是“静态的”，没有任何交互（点击按钮没反应），因为它对应的 JavaScript 还没执行。
+
+5. Hydration（注水/激活）
+   - 在浏览器渲染 HTML 的同时，它会开始下载 CSR 模式下也需要的 JavaScript 包（例如 app.js）。
+   - JS 下载并执行后，框架（如 React/Vue）会在客户端再次运行。
+   - 但它不会粗暴地重新渲染并替换所有 DOM，而是执行一个称为 **"Hydration"（注水）**的过程。
+   - Hydration 会**“接管”**服务器渲染的静态 DOM，遍历虚拟 DOM 和真实 DOM，将事件监听器（如 onClick）附加到现有的 HTML 元素上。
+   - 这个过程完成后，页面就从“静态 HTML”变成了“可交互的单页应用（SPA）”。
+
+核心流程图： **用户请求 → 服务器路由 → 服务器获取数据 → 服务器渲染 (生成HTML字符串) → 浏览器接收HTML并立即显示 → (并行)浏览器下载JS → JS执行 (Hydration) → 页面完全可交互**
+
+SSR 相比 CSR 的不可替代优势:
+
+CSR 最大的问题是“白屏时间长”和“SEO 灾难”。SSR 正是为解决这两个核心痛点而生，在以下场景具有不可替代的优势：
+
+- 搜索引擎优化 (SEO)
+- 极致的“首屏加载速度”（FCP）
+
+
+</Collapse>
+
+### 微前端 / import-html-entry 场景下，子应用中存在路由懒加载（dynamic import）的情况，import-html-entry 会如何处理或者需要注意什么
+
+<Collapse>
+import-html-entry 默认只处理 index.html 中的静态 script 和 link，所以懒加载模块不会被提前 fetch 或 exec。懒加载模块会在子应用自己的 webpack runtime 中正常 fetch（通过 publicPath 拼接 URL），然后动态加载。
+
+- 懒加载的模块执行时会使用子应用的 runtime（webpackJsonp / webpackChunk），所以如果你在 import-html-entry 里用 sandbox proxy window，需要把 webpackJsonp / webpack_require 等 runtime 挂到 proxy 上，确保 chunk 加载执行正常。
+
+- qiankun 会在 execScripts 中注入 sandbox proxy，保证动态 import 能访问 webpack runtime。
+
+</Collapse>
+
 
 ### 其他
 
 - webpack 打包速度分析, speed-measure-webpack-plugin, 打包大小分析: webpack-bundle-analyze
 - 安装相同的但不同版本的组件库, 取别名 npm i alias@npm:name@^verison
+- 灰度发布
+  - 灰度发布:新版本不是一次性发布给所有用户，而是只让部分用户先体验，逐步扩大范围，最后全量替换旧版本。
+| 对比项  | 灰度发布         | 蓝绿部署      |
+| ---- | ------------ | --------- |
+| 核心思想 | 逐步放量验证       | 一次性切换     |
+| 流量分配 | 部分用户         | 全量流量      |
+| 风险控制 | 可逐步调整比例      | 立即切换，风险更大 |
+| 适用场景 | 新版本验证、A/B 测试 | 无缝升级部署    |
+
+| 场景           | 技术方案               | 说明                      |
+| ------------ | ------------------ | ----------------------- |
+| 静态站点         | 多版本构建 + CDN 分流     | 通过 cookie/header 控制加载版本 |
+| 微前端          | 子应用级灰度             | 不同用户加载不同子应用版本           |
+| React/Vue 单页 | Feature Flag（功能开关） | 动态控制哪些功能显示              |
+| 配合后端         | 接口层灰度              | 后端返回版本信息或新接口数据          |
