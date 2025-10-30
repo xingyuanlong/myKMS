@@ -112,7 +112,47 @@
 
 
 
+### Angular 的 Signals 底层原理是啥
 
+Angular Signals 的底层本质是一套“精细依赖追踪（fine-grained reactivity）”系统，基于 值引用 + 订阅关系 + 派发更新 的机制，类似于 Reactivity Core (Vue 3) 和 SolidJS 的实现。
+
+
+| 名称           | 作用                 | 类比                                                 |
+| ------------ | ------------------ | -------------------------------------------------- |
+| `signal()`   | 创建一个可观察的值（源）       | Vue 的 `ref()`                                      |
+| `computed()` | 派生值，自动追踪依赖的 signal | Vue 的 `computed()`                                 |
+| `effect()`   | 产生副作用，监听信号变化       | Vue 的 `watchEffect()` / SolidJS 的 `createEffect()` |
+
+
+Signal 的内部数据结构:
+```
+class Signal<T> {
+  private value: T;
+  private subscribers = new Set<Effect>();
+
+  get(): T {
+    // 在依赖追踪阶段，注册依赖
+    if (currentComputation) {
+      currentComputation.dependencies.add(this);
+      this.subscribers.add(currentComputation);
+    }
+    return this.value;
+  }
+
+  set(newValue: T) {
+    if (newValue !== this.value) {
+      this.value = newValue;
+      // 通知所有依赖此 signal 的副作用重新执行
+      for (const eff of this.subscribers) {
+        eff.schedule();
+      }
+    }
+  }
+}
+
+```
+
+solidjs
 
 
 

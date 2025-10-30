@@ -121,7 +121,7 @@ SQL 注入 是攻击者把恶意 SQL 片段注入到应用构建的 SQL 查询�
 
 <Collapse>
 
-DDoS 是攻击者用大量分布式流量或资源请求耗尽目标的带宽、CPU、连接数或应用资源，导致服务不可用。攻击类型常见：流量耗尽（Volumetric，如 UDP 放大）、协议耗尽（SYN flood、TCP state exhaustion）、应用层耗尽（HTTP request floods、slowloris、expensive endpoints）。
+**DDoS 是攻击者用大量分布式流量或资源请求耗尽目标的带宽、CPU、连接数或应用资源，导致服务不可用。** 攻击类型常见：流量耗尽（Volumetric，如 UDP 放大）、协议耗尽（SYN flood、TCP state exhaustion）、应用层耗尽（HTTP request floods、slowloris、expensive endpoints）。
 
 目标——防护要解决的三件事
 - 快速检测（尽早发现）
@@ -234,7 +234,7 @@ DDoS 是攻击者用大量分布式流量或资源请求耗尽目标的带宽、
 
 ### 8. 中间人攻击
 
-</Collapse>
+<Collapse>
 
 定义：攻击者在通信双方之间拦截、篡改或监听网络流量，使双方以为是在直接通信，但实际上流量被中间人读取或修改。
 
@@ -259,7 +259,7 @@ DDoS 是攻击者用大量分布式流量或资源请求耗尽目标的带宽、
 - 禁止混合内容（Mixed Content） — 所有资源必须通过 HTTPS 加载
 - 减少在客户端存储敏感信息
 
-<Collapse>
+</Collapse>
 
 
 

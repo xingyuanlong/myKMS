@@ -1,5 +1,7 @@
 ### 1.常见的性能指标
 
+<Collapse>
+
 Performance API 是浏览器提供的内置接口，用于测量网页的加载时间、资源性能和用户体验。
 
 常见性能指标
@@ -11,7 +13,12 @@ Performance API 是浏览器提供的内置接口，用于测量网页的加载�
 - FID (First Input Delay)首次输入延迟 ，用户第一次交互（如点击按钮）与浏览器响应之间的时间间隔。 优化思路 ：减少主线程阻塞。
 - TTI (Time to Interactive)可交互时间 ，页面完成加载并能够快速响应用户交互的时间
 
+</Collapse>
+
+
 ### 2. sourcemap 有何作用
+
+<Collapse>
 
 Source Map 是一种将压缩、混淆后的代码映射回源代码的文件，用于调试和定位错误。它的主要作用如下：
 
@@ -19,7 +26,11 @@ Source Map 是一种将压缩、混淆后的代码映射回源代码的文件，
 - 错误定位 ：在生产环境中准确定位代码错误。
 - 性能分析 ：配合性能工具对源代码进行优化分析。
 
+</Collapse>
+
 ### 3.什么是 HTTPS 中间人攻击，如何预防
+
+<Collapse>
 
 中间人攻击（MITM, Man-In-The-Middle） 是指攻击者拦截客户端与服务器之间的通信，获取敏感信息或篡改数据。
 
@@ -48,6 +59,8 @@ Source Map 是一种将压缩、混淆后的代码映射回源代码的文件，
   - 设置 Strict-Transport-Security 强制使用 HTTPS。
 - 5. 客户端验证 通过双向 TLS（Mutual TLS）验证客户端身份。
 
+</Collapse>
+
 
 ### 4.CSP 是什么
 
@@ -70,5 +83,26 @@ CSP 常用指令
 | **object-src**                | Flash / 插件来源        | `'none'`（推荐禁用）                          |
 | **report-uri**                | 报告 CSP 违规           | `/csp-violation-report-endpoint/`       |
 | **upgrade-insecure-requests** | 自动将 HTTP 升级为 HTTPS  | 无值                                      |
+
+</Collapse>
+
+
+### 5. webworker 可以调用 sessionStorage localStorage吗??
+
+
+<Collapse>
+
+**不可以**
+
+Web Worker 的运行环境
+
+- **Web Worker 是在 独立线程（Worker thread）中运行的。**
+
+- **没有 DOM、没有 window 对象。**
+
+- 只有少数全局对象可用
+  ```self, postMessage, importScripts, fetch, XMLHttpRequest, IndexedDB, caches, crypto, setTimeout/setInterval, ...```
+
+window.localStorage / window.sessionStorage 是 DOM API，属于主线程对象，因此 Worker 里不可访问。
 
 </Collapse>

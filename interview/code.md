@@ -58,6 +58,8 @@ console.log(JSON.stringify(tree, null, 2));
 // > Start to push
 ```
 
+<Collapse>
+
 ```js
 function arrange(name) {
   const queue = []
@@ -97,11 +99,15 @@ function arrange(name) {
   return obj
 }
 ```
+</Collapse>
+
 
 ### 3. 从0到1新建一个React前端工程，并写一个页面，实现下面功能：上面有个2分钟的倒计时,倒计时下，有2个按钮，一个按钮可以暂停/恢复倒计时，另一个按钮可以减10秒倒计时,然后倒计时到0之后，出现一个秒杀新按钮. 进阶增加重新开始功能
 
 答案:
 react:
+
+<Collapse>
 
 ```jsx
 // 代码由github copilot 生成
@@ -215,9 +221,12 @@ const Demo = () => {
 export default Demo;
 
 ```
+</Collapse>
 
 vue3:
 代码由github copilot 生成
+
+<Collapse>
 
 ```vue
 
@@ -322,3 +331,318 @@ button {
 }
 </style>
 ```
+
+</Collapse>
+
+
+### 4. 防抖（debounce）
+
+防抖：连续触发则推迟执行，只有触发停止后才执行一次（适合搜索输入、resize 结束后的行为）。
+
+1. 简单版
+<Collapse>
+
+```
+
+function debounce(fn, wait = 300) {
+  let timer = null;
+  return function(...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      fn.apply(this, args);
+    }, wait);
+  };
+}
+
+```
+</Collapse>
+
+
+2. 支持取消 cancel() 和立即触发 flush()
+
+<Collapse>
+
+```
+function debounce(fn, wait = 300) {
+  let timer = null;
+  let lastArgs = null;
+  let lastThis = null;
+
+  function debounced(...args) {
+    lastArgs = args;
+    lastThis = this;
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      fn.apply(lastThis, lastArgs);
+      lastArgs = lastThis = null;
+      timer = null;
+    }, wait);
+  }
+
+  debounced.cancel = () => {
+    clearTimeout(timer);
+    timer = null;
+    lastArgs = lastThis = null;
+  };
+
+  debounced.flush = () => {
+    if (timer) {
+      clearTimeout(timer);
+      fn.apply(lastThis, lastArgs);
+      lastArgs = lastThis = null;
+      timer = null;
+    }
+  };
+
+  return debounced;
+}
+
+```
+
+</Collapse>
+
+3. 支持 leading（立即触发）和 trailing（默认末尾触发）
+
+<Collapse>
+
+```
+
+function debounce(fn, wait = 300, options = {}) {
+  let timer = null;
+  let lastArgs;
+  let lastThis;
+  let hasLeadingCalled = false;
+
+  const { leading = false, trailing = true } = options;
+
+  function invoke() {
+    fn.apply(lastThis, lastArgs);
+    lastArgs = lastThis = null;
+  }
+
+  function debounced(...args) {
+    lastArgs = args;
+    lastThis = this;
+
+    if (leading && !hasLeadingCalled) {
+      // 立即调用（leading）
+      invoke();
+      hasLeadingCalled = true;
+      // 设置一个 timer to reset leading flag after wait
+      timer = setTimeout(() => {
+        hasLeadingCalled = false;
+        timer = null;
+      }, wait);
+      return;
+    }
+
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      if (trailing && lastArgs) invoke();
+      hasLeadingCalled = false;
+      timer = null;
+    }, wait);
+  }
+
+  debounced.cancel = () => {
+    clearTimeout(timer);
+    timer = null;
+    lastArgs = lastThis = null;
+    hasLeadingCalled = false;
+  };
+
+  debounced.flush = () => {
+    if (timer && lastArgs) {
+      clearTimeout(timer);
+      invoke();
+      hasLeadingCalled = false;
+      timer = null;
+    }
+  };
+
+  return debounced;
+}
+
+
+
+```
+
+</Collapse>
+
+
+4. 返回 Promise 的防抖
+
+<Collapse>
+
+```
+function debouncePromise(fn, wait = 300) {
+  let timer = null;
+  let lastArgs;
+  let lastThis;
+  let pendingResolvers = [];
+
+  const debounced = function(...args) {
+    lastArgs = args;
+    lastThis = this;
+
+    clearTimeout(timer);
+
+    return new Promise((resolve, reject) => {
+      pendingResolvers.push({ resolve, reject });
+      timer = setTimeout(async () => {
+        timer = null;
+        try {
+          const result = await fn.apply(lastThis, lastArgs);
+          // resolve all pending promises with the result
+          pendingResolvers.forEach(r => r.resolve(result));
+        } catch (err) {
+          pendingResolvers.forEach(r => r.reject(err));
+        } finally {
+          pendingResolvers = [];
+        }
+      }, wait);
+    });
+  };
+
+  debounced.cancel = () => {
+    clearTimeout(timer);
+    timer = null;
+    pendingResolvers.forEach(r => r.reject(new Error('Cancelled')));
+    pendingResolvers = [];
+  };
+
+  return debounced;
+}
+
+```
+
+</Collapse>
+
+
+
+### 5. 节流（throttle）
+
+节流：固定节奏执行，间隔内最多执行一次（适合滚动、拖拽、进度上报）。
+
+1. 简单
+
+<Collapse>
+
+```
+
+function throttle_timestamp(fn, wait) {
+  let last = 0; // 上次执行时间（ms）
+
+  return function (...args) {
+    const now = Date.now();
+    if (now - last >= wait) {
+      last = now;
+      fn.apply(this, args);
+    }
+  };
+}
+
+
+```
+
+</Collapse>
+
+
+2. 定时器版（支持 trailing，即在窗口结束时执行）
+
+<Collapse>
+
+```
+
+function throttle_timer(fn, wait) {
+  let timer = null;
+  return function (...args) {
+    const context = this;
+    if (!timer) {
+      timer = setTimeout(() => {
+        timer = null;
+        fn.apply(context, args);
+      }, wait);
+    }
+  };
+}
+
+
+
+```
+
+</Collapse>
+
+
+3. 进阶
+
+<Collapse>
+
+```
+
+function throttle(fn, wait, options = {}) {
+  let lastExec = 0; // 上次执行时间
+  let timer = null; // 挂起的定时器
+  let lastArgs = null;
+  let lastThis = null;
+  const { leading = true, trailing = true } = options;
+
+  const invoke = (time) => {
+    lastExec = time;
+    fn.apply(lastThis, lastArgs);
+    lastArgs = lastThis = null;
+  };
+
+  const throttled = function (...args) {
+    const now = Date.now();
+    if (!lastExec && !leading) {
+      // 如果不允许 leading，初始化 lastExec 为当前时间，避免立即触发
+      lastExec = now;
+    }
+
+    const remaining = wait - (now - lastExec);
+    lastArgs = args;
+    lastThis = this;
+
+    if (remaining <= 0 || remaining > wait) {
+      // 时间到 — 立即执行
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      invoke(now);
+    } else if (!timer && trailing) {
+      // 在窗口结束时执行一次
+      timer = setTimeout(() => {
+        timer = null;
+        // 更新执行时间为触发时刻
+        invoke(Date.now());
+      }, remaining);
+    }
+  };
+
+  throttled.cancel = function () {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
+    lastExec = 0;
+    lastArgs = lastThis = null;
+  };
+
+  throttled.flush = function () {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+      // 直接立即执行挂起的调用
+      invoke(Date.now());
+    }
+  };
+
+  return throttled;
+}
+
+
+```
+
+</Collapse>

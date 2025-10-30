@@ -2,6 +2,8 @@
 
 ### 1.vue 动态渲染组件的原理是什么
 
+<Collapse>
+
 **本质是根据虚拟 DOM（VNode）的 type 动态切换组件**
 动态组件就是根据 VNode 的 type 动态 patch，不同类型就卸载旧组件、挂载新组件。
 
@@ -19,8 +21,11 @@
 
 **Vue 动态组件就是 根据 reactive/ref 的值动态生成 VNode type，然后通过 patch 更新组件实例，keep-alive 则通过缓存实例优化挂载卸载。**
 
+</Collapse>
+
 ### 2.Vue 项目可做哪些性能优化
 
+<Collapse>
 - 减少不必要的响应式追踪
   - 用 markRaw() 包装不需要响应的对象
   - 使用 shallowReactive / shallowRef 避免深层递归依赖
@@ -45,7 +50,11 @@
 - 虚拟滚动
 - ...
 
+</Collapse>
+
 ### 3. nextTick 原理是什么
+
+<Collapse>
 
 **nextTick在下次 DOM 更新循环结束后执行回调，确保我们能操作到最新的 DOM 状态。**
 
@@ -101,15 +110,22 @@ Vue 内部维护了多个“任务队列”，它们依次执行：
 - setTimeout 属于 宏任务（macrotask）；
 - 在一次事件循环中，微任务总是早于宏任务执行。
 
+</Collapse>
+
 ### 4.如何统一监听 Vue 组件报错
 
+<Collapse>
 在 Vue 3 中，可以通过 全局错误处理器 （errorHandler） 和 生命周期钩子（例如 onErrorCaptured ）来统一监听和处理组件中的错误.
 
 - 通过全局错误处理器 app.config.errorHandler
 - 局部错误捕获（onErrorCaptured）
 - Vue 只能捕获「Vue 运行时错误」，但是有些错误是全局 JavaScript 运行时错误（例如异步请求、脚本加载失败）。需要配合浏览器原生错误监听
 
+</Collapse>
+
 ### 5. 什么是 MVVM
+
+<Collapse>
 
 MVVM（Model-View-ViewModel） 是一种用于构建用户界面的架构模式，用于现代的前端开发框架（Vue、Angular）。它通过 数据绑定 和 视图模型 提供了高效的 UI 更新和数据同步机制。
 
@@ -132,17 +148,31 @@ Vue 是 MVVM 模型
 | 哲学思想 | 声明式 + 响应式      | 函数式 + 纯 UI 渲染              |
 | 框架定位 | 完整 MVVM 框架     | UI 库（View 层）               |
 
+</Collapse>
+
 ### 6. Vue 组件初始化的各个阶段都做了什么？
 
+<Collapse>
+
 从组件的创建到挂载到页面，再到组件的更新和销毁，每个阶段都有特定的任务和职责。
+
 🎯 组件实例创建：当我们第一次访问页面时，Vue创建组件实例，解析props、data、methods等属性方法，在组合式API中，执行 setup()。
+
 🎯 响应式系统建立：基于 Proxy 实现 reactive、ref，建立依赖收集和触发更新机制，props 传递时自动响应式处理。
+
 🎯 模板编译与渲染：将 template 编译为渲染函数，Vue 3 通过 静态提升等方式优化性能，Vite 预编译 SFC（单文件组件）。
+
 🎯 DOM 挂载：执行渲染函数生成 VNode，通过 Patch 算法 转换为真实 DOM 并插入页面，同时初始化子组件。mounted（Options API）或 onMounted（Composition API）触发，可进行 DOM 操作。
+
 🎯 响应式更新：状态变更触发 Diff 算法 计算最小 DOM 更新，beforeUpdate、updated（Options API）或 onBeforeUpdate、onUpdated（Composition API）执行相应逻辑。
+
 🎯 组件销毁：移除 DOM，清理副作用（解绑事件、销毁 watcher、清理 effect），递归卸载子组件，触发 beforeUnmount、unmounted（Options API）或 onBeforeUnmount、onUnmounted（Composition API）。
 
+</Collapse>
+
 ### 7.Vue3 如何实现双向数据绑定
+
+<Collapse>
 
 **Vue 实现双向数据绑定的核心是通过响应式系统的 数据劫持和 观察者模式来实现的。**
 
@@ -155,7 +185,7 @@ Vue3 实现双向绑定的本质是这三层：
 - 依赖收集与触发更新（effect + scheduler）
 - 模板编译生成 getter/setter 更新逻辑
 
- 数据劫持：reactive() / ref()
+数据劫持：reactive() / ref()
   Proxy/Reflect
   get 时依赖收集, set 时触发更新
 
@@ -176,11 +206,12 @@ Proxy 的缺点:
   - 嵌套非常深的对象,依赖收集和触发依然有开销
 - Proxy 不支持原始类型
    - ref 是封装value的对象
-- 
 
-
+</Collapse>
 
 ### 8.Vue 模板编译的过程
+
+<Collapse>
 
 **模板解析、AST优化 和 代码生成**
 
@@ -199,7 +230,11 @@ Proxy 的缺点:
 2. AST优化: Vue 在生成渲染函数前，会对 AST 进行优化。优化的核心目标是标记 静态节点，在渲染时，Vue 可以跳过这些静态节点，提升性能。 还有动态标记.
 3. 代码生成: 生成渲染函数是编译的最终阶段，这个阶段会将优化后的 AST 转换成 JavaScript 渲染函数。
 
+</Collapse>
+
 ### 9. vue 异步更新
+
+<Collapse>
 
 Vue 会延迟更新 DOM，等同一轮事件循环中所有状态改动都完成后，再统一执行更新。
 
@@ -207,7 +242,6 @@ Vue 会延迟更新 DOM，等同一轮事件循环中所有状态改动都完成
 ✅ 避免频繁的 DOM 重绘（性能优化）
 ✅ 保证多次修改只渲染一次（批量更新）
 ✅ 数据一致性：确保在同一事件循环中的所有数据变更后，视图一次性更新到最终状态。
-
 
 ```
 数据变化（Proxy.set）
@@ -225,9 +259,11 @@ Vue 会延迟更新 DOM，等同一轮事件循环中所有状态改动都完成
 
 **响应式数据变化 → 触发依赖 effect → 将更新任务加入微任务队列 → 批量刷新渲染。**
 
+</Collapse>
 
 ### 10. vue watch computed 的区别
 
+<Collapse>
 
 | 特性            | `computed`                                                | `watch`                                 |
 | ------------- | --------------------------------------------------------- | --------------------------------------- |
@@ -244,6 +280,8 @@ Vue 会延迟更新 DOM，等同一轮事件循环中所有状态改动都完成
 - computed 底层是用 Vue 的响应式系统（effect + 依赖收集）包装的“缓存 getter”机制。只有其内部依赖发生变化时，才重新执行计算。
 
 - watch 则是一个高阶封装，让你监听某个响应式源的变化，并在变化时执行回调。它不会缓存回调的结果，也不会阻止重复调用。
+
+</Collapse>
 
 ### 11. vue3 lis
 
