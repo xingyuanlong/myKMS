@@ -56,11 +56,11 @@
 模型输入是一种特殊类型的输入，它使组件能够将新值传播回其父组件。类似双向绑定
 
 12. 自定义事件 output 
-  -  与输入类似
+  - 与输入类似
+  - 通过 emit 触发
   
-
 13. ng-content 类似vue3 插槽, react children
-    -  支持嵌套, 默认值
+    - 支持嵌套, 默认值
     
 14. host 就是绑定到HTML 上的属性, 支持 style 属性绑定(css), 绑定是同步变化的
   宿主元素就是你的“组件”或“指令”所依附的那个 DOM 元素。
@@ -108,7 +108,6 @@
   - effect 可以监听信号的变化, 只能定义在constructor, 可以通过其选项将 Injector 传递给 effect
   - effect只能在注入上下文 （可以访问 inject 函数的地方）中创建 
   - effect 函数参数, 函数第一个参数为 onCleanup 清除副作用函数
-  - 
 
 
 

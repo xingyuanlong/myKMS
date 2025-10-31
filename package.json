@@ -1,7 +1,7 @@
 {
   "name": "mykms",
   "version": "0.0.1",
-  "description": "个人知识库,基础知识, 面试题,框架,浏览器,读书笔记,算法,AI",
+  "description": "知识库,基础知识, 面试题,框架,浏览器,读书笔记,算法,AI",
   "license": "ISC",
   "author": "",
   "type": "commonjs",

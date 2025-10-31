@@ -3,8 +3,8 @@ import vueJsx from "@vitejs/plugin-vue-jsx";
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  title: "个人知识库",
-  description: "个人知识库",
+  title: "知识库",
+  description: "知识库",
   base: "/myKMS/",
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config

@@ -3,7 +3,7 @@
 layout: home
 
 hero:
-  name: "个人知识库"
+  name: "知识库"
   text: ""
   tagline: 读书笔记, 学习记录, 框架原理, 面试真题, web安全
   actions:
@@ -24,6 +24,6 @@ features:
   - title: 学习记录
     details: 学习一些技术的记录
   - title: 面试真题
-    details: 个人面试及网络上优秀面试题
+    details: 面试及网络上优秀面试题
 ---
 
