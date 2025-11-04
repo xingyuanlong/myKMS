@@ -58,6 +58,12 @@ Tree Shaking = 静态分析 + dead code elimination
   - 动态 import 可以按需加载，但静态分析更高效;
   - 类库打包方式影响 Tree Shaking(lodash/es → 支持 Tree Shaking,lodash → CommonJS，不支持)
 
+1. 静态分析：树摇依赖于ES2015模块语法（即 import 和 export ），因为这些语法声明是静态的，使得构建工具在编译时就能确定哪些代码是没有被使用的。
+
+2. 标记未使用的导出：构建工具会遍历所有的导出项，标记那些在工程中未被其他模块引用的导出。
+
+3. 移除未引用代码：在最终的打包文件中移除那些未被引用的代码，这样做不仅减少了文件大小，还能提高应用的加载速度和性能。
+
 </Collapse>
 
 ### 4. Tree Shaking 对 css 有效吗

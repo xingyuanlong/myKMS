@@ -2,6 +2,9 @@
 
 ### 1. react尽量不要再内部定义组件
 
+
+<Collapse>
+
 ```jsx
 function App() {
   const [count, setCount] = useState(0);
@@ -39,12 +42,16 @@ function App() {
   - 性能无关的小组件
   - 需要动态生成组件类型
 
+</Collapse>
+
 ### 2. 为什么修改 Context 后, 只有useContext 的组件才会重新渲染
 
-React 内部是 精确追踪哪些 Fiber 消费了 Context。
 
-React 的 Context 依赖 Fiber 树 + 依赖收集机制：
+<Collapse>
 
+**React 内部是 精确追踪哪些 Fiber 消费了 Context。**
+
+**React 的 Context 依赖 Fiber 树 + 依赖收集机制：**
 1. Provider 提供 value。
 2. useContext / Consumer 注册依赖。当一个组件调用 `useContext(MyContext)` 时：React 在 Fiber 构建阶段找到最近的 Provider，读取当前 Context value，同时把这个 Fiber 注册到 Context 的依赖列表，标记它依赖这个 Context。
 3. Provider value 更新：React 调用 `scheduleUpdateOnFiber(providerFiber)` 更新 Provider，遍历 Fiber 树，只更新依赖该 Context 的 Fiber；没有调用 `useContext` / `Consumer` 的组件不会在依赖列表里 → 不触发重新渲染。
@@ -66,7 +73,13 @@ React Context 用于跨组件共享数据，避免 props 层层传递。其底�
 创建 Context 后，Provider 会把 value 写入 Context 对象；组件调用 useContext 时，Fiber 会读取最近的 Provider 的值，并在 Fiber 上记录对该 Context 的依赖。当 Provider 的 value 变化时，React 会标记并调度所有依赖该 Context 的 Fiber 重新渲染，其它未使用 useContext 的组件不会更新。
 这种机制保证了 按需更新：只重渲染真正消费 Context 的组件，提高性能。在并发模式下，React 还为每个渲染器维护独立的 currentValue，确保多根树或并发渲染时 Context 值一致。为了避免无效更新，应尽量拆分 Context、用 useMemo 缓存 value，并让消费组件保持细粒度。
 
+
+</Collapse>
+
 ### 3. React.memo 原理是啥
+
+
+<Collapse>
 
 **React.memo 是一个高阶组件（HOC），用于优化函数组件的渲染性能。它的核心原理是通过记忆（Memoization）组件的渲染结果，在 props 未变化时跳过重新渲染，直接返回上一次的渲染结果。**
 
@@ -102,18 +115,28 @@ React.memo 的核心原理是：
 - 跳过不必要的渲染，当 props 未变化时直接返回缓存结果
 - 支持自定义比较，通过第二个参数实现更精细的控制
 
+</Collapse>
+
 ### 4.useMemo 原理是啥
+
+
+<Collapse>
 
 **在 Fiber 上保存一份“上次计算的值和依赖项”，如果依赖没有变化，就直接返回上一次的值，而不是重新计算。**
 
 - 适合包裹 计算开销较大 或 返回稳定引用（如对象、回调函数）的情况。
 - useMemo 不会阻止组件重渲染，它只是在渲染过程中复用上一次计算的结果。
 - 如果依赖数组未变，返回的是上次缓存的引用（对象或函数也一样）。
-- 如果依赖数组省略（即 []），计算只会在初次渲染时执行一次。
+- **如果依赖数组省略（即 []），计算只会在初次渲染时执行一次。**
 - 缓存与组件生命周期绑定，自动清理
-- 依赖项要准确填写，否则可能缓存了过期的值（产生 bug）
+- **依赖项要准确填写，否则可能缓存了过期的值（产生 bug）**
+
+</Collapse>
 
 ### 5.hook 缺少依赖, 会导致什么问题(React 闭包陷阱)
+
+
+<Collapse>
 
 表现:缺少依赖导致过时闭包
 
@@ -177,14 +200,18 @@ js 角度, 闭包陷阱的根本原因是 JavaScript 的闭包机制：
 - 启用 ESLint 规则自动检测
 - 使用函数式更新避免依赖状态值
 
+</Collapse>
+
 ### 6. useEffect 和 useLayoutEffect 的区别
+
+<Collapse>
 
 **调用时机不同** 会直接影响 UI 渲染顺序和性能
 
 | Hook                  | 调用时机                | 执行特点               | 适用场景                          |
 | --------------------- | ------------------- | ------------------ | ----------------------------- |
-| **`useEffect`**       | 浏览器完成绘制（paint）后异步执行 | 不阻塞浏览器绘制           | 数据获取、订阅、日志、定时器等               |
-| **`useLayoutEffect`** | DOM 变更后、浏览器绘制前同步执行  | 阻塞绘制，先运行副作用，再渲染到屏幕 | 需要**测量 DOM 尺寸/位置** 或在绘制前做样式调整 |
+| **`useEffect`**       | 浏览器完成绘制（paint）后异步执行（异步，下一帧） | 不阻塞浏览器绘制           | 数据获取、订阅、日志、定时器等               |
+| **`useLayoutEffect`** | DOM 变更后、浏览器绘制前同步执行（同步，阻塞绘制）  | **阻塞绘制，先运行副作用，再渲染到屏幕** | 需要**测量 DOM 尺寸/位置** 或在绘制前做样式调整 |
 
 总结
 
@@ -194,18 +221,40 @@ js 角度, 闭包陷阱的根本原因是 JavaScript 的闭包机制：
 仅在必要时用 useLayoutEffect
 比如：读取 DOM 布局信息（测量元素大小）;需要在绘制前同步修改 DOM 样式（避免闪烁)
 
+
+```
+Render 阶段（计算虚拟 DOM）
+        ↓
+DOM 更新（Commit 阶段）
+        ↓
+useLayoutEffect（同步执行） 👈 页面还没绘制
+        ↓
+浏览器绘制（Repaint）
+        ↓
+useEffect（异步执行） 👈 页面已经绘制
+```
+
+</Collapse>
+
 ### 7.为何 dev 模式下 useEffect 执行两次？
+
+<Collapse>
 
 react 18后默认开启了 StrictMode, 使开发模式下，React 会刻意“多渲染一次”组件（mount → unmount → 再 mount），用来帮助我们发现不安全的副作用。
 
 借助严格模式的目标是帮助开发者提前发现以下问题：
 
-- 不纯的渲染逻辑：例如，依赖外部状态或直接修改 DOM。
-- 未正确清理的副作用：例如，未在 useEffect 的清理函数中取消订阅或清除定时器。
-- 不稳定的组件行为：例如，组件在多次挂载和卸载时表现不一致。
+- **不纯的渲染逻辑**：例如，依赖外部状态或直接修改 DOM。
+- **未正确清理的副作用**：例如，未在 useEffect 的清理函数中取消订阅或清除定时器。
+- **不稳定的组件行为**：例如，组件在多次挂载和卸载时表现不一致。
 通过强制组件挂载和卸载两次，React 可以更好地暴露这些问题, “多跑一次是为了更早发现问题，不是 Bug。”
 
+</Collapse>
+
+
 ### 8.React state 不可变数据
+
+<Collapse>
 
 **State（状态）必须保持不可变（immutable）**
 不可变数据（Immutable Data）:指的是一旦创建就不能直接修改的对象或数组。如果要更新，必须创建一个新对象/数组。
@@ -226,7 +275,13 @@ React 为何需要不可变数据
 
 负责数据可以用 immer 库
 
+</Collapse>
+
+
 ### 9.React state 异步更新
+
+<Collapse>
+
 
 setState 一般不是立即更新
 
@@ -269,9 +324,14 @@ React 的 setState 不会立刻改变 state，而是：
 3. 在下一次渲染（Render Phase）时才根据队列计算新的 state。
 4. 在 Commit Phase 把新的 state 应用到 DOM 并触发副作用（useEffect）。
 
-因此我们看到的“异步”本质上是 延迟应用 + 批量处理。
+因此我们看到的“异步”本质上是 **延迟应用 + 批量处理**。
+
+</Collapse>
+
 
 ### 10. React 项目可做哪些性能优化？
+
+<Collapse>
 
  **减少渲染次数、缩短渲染时间、降低资源体积、提升交互流畅度。**
 
@@ -305,7 +365,12 @@ React 的 setState 不会立刻改变 state，而是：
 - 虚拟列表（Windowing）：react-window、react-virtualized。
 - 对非常大的列表，使用增量渲染或分页加载。
 
+</Collapse>
+
+
 ### 11.React项目中组件销毁有哪几种方式？
+
+<Collapse>
 
 1. 条件渲染（动态卸载）
 2. 路由切换
@@ -314,7 +379,12 @@ React 的 setState 不会立刻改变 state，而是：
 5. 修改 key 强制重新挂载（重置组件）
 6. 手动卸载（Portal 或第三方库）
 
+</Collapse>
+
+
 ### 12. JSX 的本质是什么？
+
+<Collapse>
 
 **JSX 本质上是 JavaScript 的语法糖，它会被编译为 React.createElement(...) 或 React17+ 的 jsx(...) 调用，最终生成普通的 JavaScript 对象（VNode / 虚拟 DOM）。**
 
@@ -324,15 +394,22 @@ React 的 setState 不会立刻改变 state，而是：
 | 运行时（React）            | 函数调用返回一个 JS 对象（虚拟 DOM）                     |
 | 渲染时（React Reconciler） | 根据虚拟 DOM 更新真实 DOM                          |
 
+</Collapse>
+
 ### 13.如何理解 React Fiber 架构？
 
-React Fiber 是 React16 引入的新架构，它解决了老版本 同步递归渲染 带来的卡顿问题，让 React 能够实现可中断、可恢复的异步渲染。
+<Collapse>
+
+React Fiber 是 React16 引入的新架构，它解决了老版本 同步递归渲染 带来的卡顿问题，让 React 能够实现**可中断、可恢复的异步渲染**。
 
 1. 为什么要有 Fiber
+
 1.1 老架构（Stack Reconciler）的问题
 React15 及以前的 Reconciler 是基于 递归调用 的。当组件树很大时，递归更新是一口气（synchronous）完成的，中途不能暂停。
 如果更新耗时几十毫秒甚至上百毫秒，浏览器就无法及时响应用户输入或动画，造成掉帧、卡顿。
+
 👉 需要一种机制能：
+
     - 把更新拆分成小任务
     - 按优先级执行
     - 在必要时暂停渲染，先处理用户交互，再回来继续
@@ -384,7 +461,7 @@ Fiber 把渲染拆分为两大阶段：
 
 1. Render 阶段（可中断）
 
-- 也叫 “Reconciliation”
+- 也叫 “Reconciliation”(协调)
 - 从根节点开始，按优先级遍历 Fiber 树
 - 构建 workInProgress 树，标记需要更新的节点
 - 如果浏览器需要打断（如用户输入、动画），可以中止，稍后继续
@@ -414,7 +491,7 @@ IdlePriority（非必要任务）
 
 - 高优先级：用户输入、焦点、动画
 - 低优先级：不紧急的列表渲染、后台数据加载
-- Fiber 节点在被调度时会携带自己的 expirationTime（过期时间），React 根据优先级决定先处理谁。
+- Fiber 节点在被调度时会携带类似自己的 expirationTime（过期时间），React 根据优先级决定先处理谁。
 
 **React Fiber = 用链表数据结构重写组件树 + 分片可中断渲染 + 双缓冲提交 + 优先级调度**
 
@@ -426,7 +503,7 @@ IdlePriority（非必要任务）
     - 对 Render / Commit 的影响:Render 阶段：依赖 deferredValue 的组件渲染会延后。React 先 Render 其他部分 → Commit → UI 更新一部分。再 Render 依赖 deferredValue 的部分 → Commit → UI 补齐。Commit 阶段：可能出现 多次 Commit：先 Commit 高优先级的 UI（比如输入框内容）。再 Commit 低优先级的 UI（比如搜索结果）。
 
 - Fiber 架构是机制，Concurrent Mode 是策略。
-  - iber 提供了能力，并发模式利用了这些能力。
+  - Fiber 提供了能力，并发模式利用了这些能力。
   - 具体来说：
     - Fiber 提供能力：
         - 将递归变成可中断的循环（time slicing）
@@ -440,7 +517,14 @@ IdlePriority（非必要任务）
 - Fiber 是基础架构：解决了 React 渲染不可中断的问题。
   - Concurrent Mode 是应用层能力：利用 Fiber 提供的可中断渲染和任务调度，实现并发渲染、优先级管理和流畅的用户体验。
             没有 Fiber，就没有 Concurrent Mode。
+
+</Collapse>
+
+
 ### 14. vue3 diff 算法 与react diff算法
+
+<Collapse>
+
 
 共同点:
 
@@ -462,7 +546,12 @@ IdlePriority（非必要任务）
 | **组件更新策略**     | 有**响应式系统**（依赖收集 + effect），组件只会在依赖变化时重新渲染，减少 diff 次数。                                     | 没有内置响应式，组件 render 受父组件传入 props 或 state 改变驱动。              |
 | **fiber 架构**   | Vue 3 仍是递归遍历 vnode，使用位运算优化，但没有 fiber 异步可中断更新。                                            | React 16+ 使用 Fiber，将 diff 拆分为可中断的单元，实现并发调度。               |
 
+</Collapse>
+
+
 ### 15. React 事件
+
+<Collapse>
 
 React 事件系统是 React 为了实现 跨浏览器一致性、性能优化、与 Fiber 协调 而构建的一套合成事件机制（Synthetic Events）。
 它不是直接把事件监听器绑定在 DOM 节点上，而是在内部做了一层封装。
@@ -497,7 +586,11 @@ React 渲染时不会直接给 button 注册原生 onclick，而是：
 - React17 之后：事件绑定改为绑定在根容器 DOM 节点（如 root），避免多个 React 应用之间的事件冲突，更易与原生事件混用。
 - React 在合成事件回调中会自动开启批处理（batching），把多次 setState 合并为一次渲染更新：
 
+</Collapse>
+
 ### 16. React batchUpdate 机制
+
+<Collapse>
 
 React 的 batchUpdate（批处理更新）机制 是一种优化策略，旨在将多个状态更新合并为一次渲染，减少不必要的组件重新渲染次数，从而提高性能。
 
@@ -524,7 +617,11 @@ React 的 batchUpdate（批处理更新）机制 是一种优化策略，旨在�
 
 - 状态一致性 确保在同一个上下文中多次状态变更后，组件最终基于最新的状态值渲染，避免中间状态导致的 UI 不一致。
 
+</Collapse>
+
 ### 17. React concurrency 并发机制是什么, 怎么体现的
+
+<Collapse>
 
 1. 背景：为什么需要并发机制
 在 React16 之前（Stack Reconciler）：
@@ -619,7 +716,12 @@ React18 默认开启了并发特性（通过 createRoot）。
 | 交互流畅度 | 易卡顿               | 更流畅，响应更及时                                                  |
 | API   | `ReactDOM.render` | `ReactDOM.createRoot`，`startTransition`，`useDeferredValue` |
 
+</Collapse>
+
+
 ### 18.为何 Hooks 不能放在条件或循环之内？
+
+<Collapse>
 
 一个组件中的 hook 会以链表的形式串起来， FiberNode 的 memoizedState 中保存了 Hooks 链表中的第一个 Hook。
 
@@ -633,7 +735,11 @@ Hooks 本质上是 函数组件的状态机 + 调度机制。
 
 自定义 Hook：就是函数，里面可以用内置 Hook 来组合逻辑。
 
+</Collapse>
+
 ### 19.useEffect 的底层是如何实现的
+
+<Collapse>
 
 useEffect 的角色
 
@@ -718,7 +824,12 @@ Commit 阶段执行流程
 - React 通过链表管理所有 Hook 和 Effect，方便批量处理。
 - useEffect 保证 render 阶段纯净，而副作用延迟到合适时机执行。
 
+</Collapse>
+
+
 ### 20.React 组件渲染和更新的全过程
+
+<Collapse>
 
 React 组件的渲染和更新过程涉及多个阶段，包括 **初始化、渲染、协调、提交、清理** 等
 以下是 React 组件渲染和更新的全过程，结合源码逻辑和关键步骤进行详细分析。
@@ -732,14 +843,18 @@ React 组件的渲染和更新过程涉及多个阶段，包括 **初始化、�
 - 清理阶段：重置全局变量，准备下一次更新。
 
 2. 详细流程分析
+
 （1）初始化阶段
+
     - 触发条件：组件首次渲染或状态/属性更新。
     - 关键函数：render、createRoot、scheduleUpdateOnFiber。
     - 逻辑：
       - 通过 ReactDOM.render 或 createRoot 初始化应用。
       - 创建根 Fiber 节点（HostRoot）。
       - 调用 scheduleUpdateOnFiber，将更新任务加入调度队列。
+
 （2）渲染阶段
+
     - 触发条件：调度器开始执行任务。
     - 关键函数：performSyncWorkOnRoot、beginWork、renderWithHooks。
     - 逻辑：
@@ -748,13 +863,16 @@ React 组件的渲染和更新过程涉及多个阶段，包括 **初始化、�
       - 对于函数组件，调用 renderWithHooks，执行组件函数并生成新的 Hooks 链表。
       - 对于类组件，调用 instance.render，生成新的虚拟 DOM。
       - 对于 Host 组件（如 div），生成对应的 DOM 节点。
+
 （3）协调阶段
+
     - 触发条件：新的虚拟 DOM 生成后。
     - 关键函数：reconcileChildren、diff。
     - 逻辑：
       - 调用 reconcileChildren，对比新旧 Fiber 节点。
       - 根据 diff 算法，找出需要更新的节点。
       - 为需要更新的节点打上 Placement、Update、Deletion 等标记。
+
 （4）提交阶段
 
     - 触发条件：协调阶段完成后。
@@ -764,6 +882,7 @@ React 组件的渲染和更新过程涉及多个阶段，包括 **初始化、�
       - 调用 commitWork，递归处理 Fiber 节点。
       - 根据节点的标记，执行 DOM 操作（如插入、更新、删除）。
       - 调用生命周期钩子（如 componentDidMount、componentDidUpdate）。
+
 （5）清理阶段
     - 触发条件：提交阶段完成后。
     - 关键函数：resetHooks、resetContext。
@@ -776,7 +895,11 @@ React 渲染分为两阶段：Render 阶段负责根据 props 和 state 生成�
 首次渲染是完整构建 Fiber 树并创建 DOM，更新时只计算需要变更的部分。
 在 React18 并发模式下，Render 阶段可被打断以保证用户交互优先，Commit 阶段始终同步执行
 
+</Collapse>
+
 ### 21.React 优化
+
+<Collapse>
 
 1. React.memo：对于函数组件，React.memo 可以避免不必要的重新渲染。当组件的 props 没有变化时，React 会跳过重新渲染过程。
 2. 在 JSX 中创建匿名函数或内联函数会导致每次渲染时都重新创建函数，从而触发子组件的重新渲染。尽量避免这种做法。 使用useCallback包裹避免重复创建函数, 避免重复渲染.
@@ -791,18 +914,29 @@ React 渲染分为两阶段：Render 阶段负责根据 props 和 state 生成�
 10. 服务器端渲染（SSR）与静态站点生成（SSG）
 11. 图片懒加载
 
-### 22.React 使用immutable
+</Collapse>
 
-  React 使用immutable: 组件是否更新 依然取决于 props / state 引用是否变化（浅比较）; 状态管理;React.memo / PureComponent / useMemo / useCallback：依赖浅比较，如果数据是 mutable，优化就会失效。
-  因为 React 依赖浅比较优化渲染，immutable 可以保证“引用变化 === 数据变化”，从而让 UI 更新正确且高效 更好的性能+易于追踪变化+避免意外的副作用; Redux 鼓励使用不可变数据（Immutable Data）的概念来管理应用状态
+### 22.
+<Collapse>
+
+
+
+
+</Collapse>
 
 ### 23.在 React 应用中如何排查性能问题?
+
+<Collapse>
 
   1. 浏览器层面（渲染、网络、JS 执行)
   2. React 本身（组件渲染、状态管理、diff 算法） React DevTools Profiler
     常见问题: 不必要的 re-render(状态提升过多，导致全局刷新,props 传递引用类型（对象/数组）时，每次 render 都创建新引用,解决：React.memo、useCallback、useMemo、状态下沉); 大列表渲染卡顿(列表虚拟化);重复计算 / 重逻辑;昂贵的 DOM 操作;
 
+</Collapse>
+
 ### 24. useTransition useDeferredValue debounce 对比与原理
+
+<Collapse>
 
 | 特性            | `useTransition`                     | `useDeferredValue`            | 防抖（Debounce）             |
 | ------------- | ----------------------------------- | ----------------------------- | ------------------------ |
@@ -816,22 +950,28 @@ React 渲染分为两阶段：Render 阶段负责根据 props 和 state 生成�
 | **是否影响组件渲染**  | ✅ 是，可通过 `isPending` 状态判断更新是否完成，提供反馈 | ✅ 是，可通过比较原始值和延迟值判断是否需要更新 UI   | ✅ 是，延迟执行函数，减少不必要的渲染      |
 | **是否适用于第三方库** | ❌ 否，需控制状态更新函数                       | ✅ 是，适用于无法控制状态更新的场景            | ✅ 是，适用于控制频繁触发的函数         |
 
+</Collapse>
 
 ### 25.react suspence 与 lazy() 底层实现原理是什么?
 
-  React.lazy 的底层是让组件在未加载时 抛出一个 Promise，而 Suspense 则在 Fiber 渲染时捕获这个 Promise，挂起渲染并显示 fallback，等 Promise resolve 后恢复渲染。
+<Collapse>
 
-  Suspense 作用:用于在子树中捕获“未就绪状态”，显示一个 fallback UI（比如 loading）。;与 ErrorBoundary 类似，只不过它捕获的是 “Promise 挂起”。
+  **React.lazy 的底层是让组件在未加载时 抛出一个 Promise，而 Suspense 则在 Fiber 渲染时捕获这个 Promise，挂起渲染并显示 fallback，等 Promise resolve 后恢复渲染。**
+
+  Suspense 作用:用于在子树中捕获“未就绪状态”，显示一个 fallback UI（比如 loading）。;与 ErrorBoundary 类似，只不过它捕获的是 **“Promise 挂起”。**
 
   React.lazy 把动态加载的组件封装成一个“会在未加载时抛出 Promise”的特殊组件。
 
   Suspense 作为“捕手”，在渲染子树时捕获这个 Promise，展示 fallback，并在 Promise resolve 后再重新渲染。
+
   Suspense,底层原理:
 
       - 渲染子组件时，如果子组件内部调用 lazy 还没 resolve，就会抛出一个 Promise。
       - React Fiber 架构检测到渲染过程中抛出了 Promise，会暂停当前 Fiber 树的渲染。
       - React 将这个 Promise 挂到 Suspense 边界上，等 Promise resolve 后重新触发渲染。
       - 在等待期间，Suspense 显示 fallback。
+
+</Collapse>
 
 ### 26. react 如何实现国际化
 
@@ -880,6 +1020,7 @@ react-i18next 使用 Context + Hook，组件通过 useTranslation() 获取翻译
 <Collapse>
 
 1. createSlice 内部用 Immer，允许你写“可变写法”，但底层会生成不可变的新 state。
+
 2. createAsyncThunk 内部是如何工作的？
    - 生成一个 thunk action（函数），会在调用时触发一个 生命周期三段式：
       - pending → 异步任务开始
@@ -888,14 +1029,14 @@ react-i18next 使用 Context + Hook，组件通过 useTranslation() 获取翻译
    - 内部用 dispatch 多次派发 action，而不是只派发一次。
 
 3.Redux Toolkit 如何优化性能
-    - 1.内置 Immer + useSelector 的 浅比较，减少无效渲染。
-    - 2.createEntityAdapter 提供规范化数据结构（normalized state），避免深层次 diff。
-    - 3. 配合 memo / useMemo / useCallback，只渲染必要组件。
+  - 1.内置 Immer + useSelector 的 浅比较，减少无效渲染。
+  - 2.createEntityAdapter 提供规范化数据结构（normalized state），避免深层次 diff。
+  - 3. 配合 memo / useMemo / useCallback，只渲染必要组件。
 
 4. 如果要在 Redux Toolkit 里实现一个 Undo/Redo 功能，怎么做？
-    - 在 reducer 里维护一个 past[]、present、future[] 三段式结构。
-    - 每次 dispatch：把当前 present 推入 pastpresent 替换为新 state
-    - Undo → 从 past 弹出最后一个到 present，并把原先的 present 推入 future
+  - 在 reducer 里维护一个 past[]、present、future[] 三段式结构。
+  - 每次 dispatch：把当前 present 推入 pastpresent 替换为新 state
+  - Undo → 从 past 弹出最后一个到 present，并把原先的 present 推入 future
 
 </Collapse>
 

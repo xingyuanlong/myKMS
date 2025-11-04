@@ -207,6 +207,153 @@ DNS 通常使用 UDP 53 端口（查询），TCP 用于传输大数据量（如�
 </Collapse>
 
 
+### 7. HTTP/3
+
+<Collapse>
+
+**HTTP/3 = HTTP/2 + QUIC(UDP)**
+
+HTTP/3 是继 HTTP/2 之后的下一代超文本传输协议。它的核心变化是：**不再基于 TCP，而是基于 QUIC（UDP 之上的新协议）。**
+
+| 协议           | 传输层           | 特点            | 存在问题           |
+| ------------ | ------------- | ------------- | -------------- |
+| **HTTP/1.1** | TCP           | 简单、可靠         | 多连接、阻塞严重       |
+| **HTTP/2**   | TCP           | 多路复用、头部压缩     | TCP 队头阻塞无法彻底解决 |
+| **HTTP/3**   | **UDP（QUIC）** | 多路复用、内置加密、低延迟 | 部分老设备不兼容 UDP   |
+
+
+QUIC（UDP）的优势
+
+QUIC 直接运行在 UDP 之上，自己实现可靠传输 + 拥塞控制 + 加密：
+- 消除队头阻塞：每个流独立传输，不互相影响
+- 1-RTT 握手（甚至 0-RTT）
+- 连接可迁移（基于 Connection ID）
+- 内置 TLS 1.3 加密（强制 HTTPS）
+
+```
+// HTTP/2
+HTTP/2
+  ↓
+  TLS
+  ↓
+  TCP
+  ↓
+  IP
+
+// HTTP/3
+HTTP/3
+  ↓
+  QUIC (内含TLS 1.3 + 可靠传输)
+  ↓
+  UDP
+  ↓
+  IP
+
+```
+
+</Collapse>
+
+
+
+### 8. nginx proxy_pass 与location 结尾加不加 / 对路径的影响
+
+<Collapse>
+
+**尾斜杠“决定路径拼接规则”** ,location 和 proxy_pass 的结尾 是否带 /，直接决定了 Nginx 如何拼接请求路径。
+
+proxy_pass 加不加 /:
+
+- 不加 /：location 匹配的路径会被完整拼接到 proxy_pass 地址后（适合后端接口路径与前端请求路径完全一致的场景）。
+- 加 /：location 匹配的路径会被替换为 /，仅将剩余路径拼接到 proxy_pass 地址后（适合需要简化后端接口路径的场景）。
+
+参考: 
+|  情形 | `location` 配置 | `proxy_pass` 配置        | 请求示例       | 转发给上游的路径                 | 说明                          |
+| :-: | :------------ | :--------------------- | :--------- | :----------------------- | :-------------------------- |
+|  1  | `/api`（不带斜杠）  | `http://backend`（不带斜杠） | `/api/foo` | `http://backend/api/foo` | 保留原始路径 `/api/foo`。          |
+|  2  | `/api`（不带斜杠）  | `http://backend/`（带斜杠） | `/api/foo` | `http://backend//foo`    | 去除 `/api` 前缀后拼接，产生双斜杠。      |
+|  3  | `/api/`（带斜杠）  | `http://backend`（不带斜杠） | `/api/foo` | `http://backend/api/foo` | 保留 `/api/` 前缀。              |
+|  4  | `/api/`（带斜杠）  | `http://backend/`（带斜杠） | `/api/foo` | `http://backend/foo`     | 去除 `/api/` 前缀后拼接，结果 `/foo`。 |
+
+
+</Collapse>
+
+
+### 9. nginx多域名隔离, 同域名不同路径映射
+
+<Collapse>
+
+Nginx 可以通过 include 指令或虚拟主机（vhost）实现前端多环境（如开发、测试、生产）的隔离部署，同时针对同域名不同路径的映射场景，需要处理路径重写和资源引用问题
+
+多环境隔离的核心是为不同环境（如 dev、test、prod）配置独立的 Nginx 规则，避免互相干扰。
+1. 基于 include 指令的多环境配置（推荐）
+  - 适合单服务器部署多个环境，通过拆分配置文件实现隔离，便于维护。
+  - 也适合单服务部署多域名环境
+
+2. 基于虚拟主机（vhost）的多环境配置
+```nginx
+http {
+    # 开发环境（域名区分）
+    server {
+        listen 80;
+        server_name dev.example.com;  # 开发环境域名
+        root /path/to/frontend/dev;
+        # ... 其他配置（路由、代理等）
+    }
+
+    # 测试环境（端口区分）
+    server {
+        listen 8081;  # 测试环境端口
+        server_name localhost;
+        root /path/to/frontend/test;
+        # ... 其他配置
+    }
+
+    # 生产环境（HTTPS）
+    server {
+        listen 443 ssl;
+        server_name example.com;  # 生产环境域名
+        root /path/to/frontend/prod;
+        # ... SSL 配置和其他生产环境特有的规则
+    }
+}
+```
+
+同域名不同路径映射的重写问题及解决方案
+
+当多个前端应用部署在同一域名的不同路径下（如 example.com/app1、example.com/app2），需要解决路径映射和资源引用的问题。
+
+```nginx
+server {
+    listen 80;
+    server_name example.com;
+    root /var/www;  # 父目录
+
+    # 应用 A：匹配 /app1 路径
+    location /app1 {
+        # 实际文件目录为 /var/www/app1
+        alias /var/www/app1;  # 注意：这里用 alias 而非 root（关键区别）
+        index index.html;
+
+        # 解决 History 路由刷新 404
+        try_files $uri $uri/ /app1/index.html;
+    }
+
+    # 应用 B：匹配 /app2 路径
+    location /app2 {
+        alias /var/www/app2;
+        index index.html;
+        try_files $uri $uri/ /app2/index.html;
+    }
+}
+```
+关键区别：alias vs root
+
+root /var/www：请求 /app1/static/css.css 会映射到 /var/www/app1/static/css.css（拼接完整路径）。
+alias /var/www/app1：请求 /app1/static/css.css 会直接映射到 /var/www/app1/static/css.css（替换 /app1 为实际目录），更适合子路径部署。
+
+</Collapse>
+
+
 
 
 

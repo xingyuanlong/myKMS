@@ -99,8 +99,8 @@ function arrange(name) {
   return obj
 }
 ```
-</Collapse>
 
+</Collapse>
 
 ### 3. 从0到1新建一个React前端工程，并写一个页面，实现下面功能：上面有个2分钟的倒计时,倒计时下，有2个按钮，一个按钮可以暂停/恢复倒计时，另一个按钮可以减10秒倒计时,然后倒计时到0之后，出现一个秒杀新按钮. 进阶增加重新开始功能
 
@@ -221,6 +221,7 @@ const Demo = () => {
 export default Demo;
 
 ```
+
 </Collapse>
 
 vue3:
@@ -334,7 +335,6 @@ button {
 
 </Collapse>
 
-
 ### 4. 防抖（debounce）
 
 防抖：连续触发则推迟执行，只有触发停止后才执行一次（适合搜索输入、resize 结束后的行为）。
@@ -342,7 +342,7 @@ button {
 1. 简单版
 <Collapse>
 
-```
+```js
 
 function debounce(fn, wait = 300) {
   let timer = null;
@@ -355,14 +355,14 @@ function debounce(fn, wait = 300) {
 }
 
 ```
-</Collapse>
 
+</Collapse>
 
 2. 支持取消 cancel() 和立即触发 flush()
 
 <Collapse>
 
-```
+```js
 function debounce(fn, wait = 300) {
   let timer = null;
   let lastArgs = null;
@@ -405,7 +405,7 @@ function debounce(fn, wait = 300) {
 
 <Collapse>
 
-```
+```js
 
 function debounce(fn, wait = 300, options = {}) {
   let timer = null;
@@ -469,12 +469,11 @@ function debounce(fn, wait = 300, options = {}) {
 
 </Collapse>
 
-
 4. 返回 Promise 的防抖
 
 <Collapse>
 
-```
+```js
 function debouncePromise(fn, wait = 300) {
   let timer = null;
   let lastArgs;
@@ -518,8 +517,6 @@ function debouncePromise(fn, wait = 300) {
 
 </Collapse>
 
-
-
 ### 5. 节流（throttle）
 
 节流：固定节奏执行，间隔内最多执行一次（适合滚动、拖拽、进度上报）。
@@ -528,7 +525,7 @@ function debouncePromise(fn, wait = 300) {
 
 <Collapse>
 
-```
+```js
 
 function throttle_timestamp(fn, wait) {
   let last = 0; // 上次执行时间（ms）
@@ -547,12 +544,11 @@ function throttle_timestamp(fn, wait) {
 
 </Collapse>
 
-
 2. 定时器版（支持 trailing，即在窗口结束时执行）
 
 <Collapse>
 
-```
+```js
 
 function throttle_timer(fn, wait) {
   let timer = null;
@@ -573,12 +569,11 @@ function throttle_timer(fn, wait) {
 
 </Collapse>
 
-
 3. 进阶
 
 <Collapse>
 
-```
+```js
 
 function throttle(fn, wait, options = {}) {
   let lastExec = 0; // 上次执行时间
@@ -644,5 +639,483 @@ function throttle(fn, wait, options = {}) {
 
 
 ```
+
+</Collapse>
+
+### 5. 手写 Promise
+
+<Collapse>
+
+```js
+class MyPromise {
+        static PENDING = "pending";
+        static RESOLVED = "resolved";
+        static REJECTED = "rejected";
+        constructor(executor) {
+          this.status = MyPromise.PENDING;
+          // resolve 的值
+          this.value = null;
+          // reject 的值
+          this.reason = null;
+          // then 成功回调
+          this.onFulfilledQueues = [];
+          // then 失败回调
+          this.onRejectedQueues = [];
+
+          // 执行成功回掉
+          let resolve = (value) => {
+            if (this.status === MyPromise.PENDING) {
+              this.status = MyPromise.RESOLVED;
+              this.value = value;
+              // console.log("this.onFulfilledQueues", this.onFulfilledQueues);
+              this.onFulfilledQueues.forEach((item) => {
+                try {
+                  item(value);
+                } catch (err) {
+                  reject(err);
+                }
+              });
+            }
+          };
+
+          // 执行失败回掉
+          let reject = (reason) => {
+            if (this.status === MyPromise.PENDING) {
+              this.status = MyPromise.REJECTED;
+              this.reason = reason;
+              this.onRejectedQueues.forEach((item) => {
+                try {
+                  item(value);
+                } catch (err) {
+                  reject(err);
+                }
+              });
+            }
+          };
+
+          try {
+            executor(resolve, reject);
+          } catch (err) {
+            reject(err);
+          }
+        }
+
+        then(onFulfilled, onRejected) {
+          onFulfilled =
+            typeof onFulfilled === "function" ? onFulfilled : (value) => value;
+          onRejected =
+            typeof onRejected === "function"
+              ? onRejected
+              : (reason) => {
+                  throw reason;
+                };
+
+          const promise = new MyPromise((res, rej) => {
+            if (this.status === MyPromise.PENDING) {
+              this.onFulfilledQueues.push((v) => res(onFulfilled(v)));
+              this.onRejectedQueues.push((v) => rej(onRejected(v)));
+            }
+            // 状态是成功态，直接就调用 onFulfilled 函数
+            if (this.status === MyPromise.RESOLVED) {
+              res(onFulfilled(this.value));
+            }
+
+            // 状态是成功态，直接就调用 onRejected 函数
+            if (this.status === MyPromise.REJECTED) {
+              rej(onRejected(this.reason));
+            }
+          });
+
+          return promise;
+        }
+
+        // 将多个 Promise 并行等待：所有都成功则返回按原数组顺序的结果数组，
+        // 只要有一个失败则立即 reject（行为类似原生 Promise.all）
+        // 参数：arr - Promise 实例数组
+        // 返回：MyPromise，resolve(valueArray) / reject(firstError)
+        static all(arr) {
+          return new MyPromise((res, rej) => {
+            let result = [];
+            let count = 0;
+            for (let i = 0; i < arr.length; i++) {
+              arr[i].then(
+                (d) => {
+                  result[i] = d;
+                  if (++count === arr.length) {
+                    res(result);
+                  }
+                },
+                (err) => {
+                  rej(err);
+                }
+              );
+            }
+          });
+        }
+        // 竞速：返回第一个完成（resolve 或 reject）的结果（类似原生 Promise.race）
+        // 参数：arr - Promise 实例数组
+        // 返回：MyPromise，resolve(firstResolved) 或 reject(firstRejected)
+      
+        static race(arr) {
+          return new MyPromise((res, rej) => {
+            for (let i = 0; i < arr.length; i++) {
+              arr[i].then(res, rej);
+            }
+          });
+        }
+        
+        // allSettled：等待所有 Promise 都 settle（不论成功或失败）后返回结果集合
+        // 参数：promises - Promise 实例数组
+        // 返回：MyPromise，resolve(resultArray)
+        // 说明：本实现将每个 Promise 的 finally 视作“完成”的回调点并把返回值放到结果数组，
+        //       意味着结果数组项的结构取决于 finally 回调传入的值 —— 与原生 Promise.allSettled 返回
+        //       的 {status, value/reason} 结构有所不同。调整以匹配原生行为可在 finally/then 中
+        //       分别处理 fulfilled/rejected 情况。
+
+        static allSettled(promises) {
+          return new MyPromise((resolve) => {
+            let result = [];
+            let count = 0;
+            for (let i = 0; i < promises.length; i++) {
+              promises[i].finally((res) => {
+                result[i] = res;
+                if (++count == promises.length) {
+                  resolve(result);
+                }
+              });
+            }
+          });
+        }
+
+        // any：只要有一个 Promise 成功就 resolve（值为第一个成功的结果），
+        //      若全部失败则 reject，返回所有错误组成的数组（行为类似原生 Promise.any，
+        //      但原生 Promise.any 在全部失败时会返回 AggregateError）
+        // 参数：arr - Promise 实例数组
+        // 返回：MyPromise，resolve(firstSuccess) 或 reject(errorArray)
+ 
+        static any(arr) {
+          return new MyPromise((res, rej) => {
+            let result = [];
+            let count = 0;
+            for (let i = 0; i < arr.length; i++) {
+              arr[i].then(
+                (d) => {
+                  res(d);
+                },
+                (err) => {
+                  result[i] = err;
+                  if (++count === arr.length) {
+                    rej(result);
+                  }
+                }
+              );
+            }
+          });
+        }
+
+        catch(rej) {
+          return this.then(null, rej);
+        }
+
+        finally(res) {
+          return this.then(res, res);
+        }
+
+        // map：限制并发数的 Promise 执行器
+        // 参数：
+        //   promises - Promise 实例数组（或返回 Promise 的函数数组，视使用场景）
+        //   concurrency - 最大并发数（同时运行的 Promise 数量上限）
+        // 返回：MyPromise，resolve(resultArray) 在所有 Promise 完成后触发
+        // 算法要点：
+        //  - 使用 nextIndex 指向下一个待启动的 Promise，下发任务时递增 nextIndex
+        //  - 初始启动 concurrency 个任务；每当一个任务完成后（finally 回调），
+        //    记录结果并启动下一个待办任务，从而始终保持并发数量不超过 concurrency
+        //  - 通过 count 统计已完成任务数，全部完成后 resolve 最终结果数组
+        // 注意：
+        //  - 这里通过 promises[i].finally(...) 作为“完成”判定点，因此无论成功或失败都
+        //    会触发后续调度；若需区分成功/失败并保留状态信息，需要在 finally/then 中
+        //    对 result 数组项存储更丰富的对象（如 { status, value/reason }）
+
+        static map(promises, concurrency) {
+          // 返回一个新的 MyPromise
+          return new MyPromise((resolve) => {
+            let result = []; // 用于保存每个 Promise 的结果
+            let count = 0; // 已完成的 Promise 数量
+            let nextIndex = 0; // 下一个要启动的 Promise 下标
+
+            // 并发执行的函数
+            function run() {
+              // 如果所有 Promise 都已启动，则直接返回
+              if (nextIndex >= promises.length) return;
+              const current = nextIndex; // 当前要启动的 Promise 下标
+              nextIndex++; // 下一个要启动的下标
+              // 启动当前 Promise，并在其 finally 后处理结果
+              promises[current].finally((res) => {
+                result[current] = res; // 保存结果到对应位置
+                count++; // 完成数量加一
+                if (count === promises.length) {
+                  // 所有 Promise 都完成后，resolve 最终结果
+                  resolve(result);
+                } else {
+                  // 启动下一个 Promise
+                  run();
+                }
+              });
+            }
+
+            // 一开始并发启动 concurrency 个 Promise
+            for (let i = 0; i < concurrency && i < promises.length; i++) {
+              run();
+            }
+          });
+        }
+      }
+
+      let p1 = new MyPromise((resolve, reject) => {
+        setTimeout(() => {
+          console.log("ok");
+          resolve("成功了");
+        }, 1000);
+      });
+
+      p1.then(
+        (data) => {
+          console.log("then1 resolve", data);
+          return 111;
+        },
+        (err) => {
+          console.log("then1 reject", err);
+        }
+      )
+        .then(
+          (data) => {
+            console.log("then2 resolve", data);
+          },
+          (err) => {
+            console.log("then2 reject", err);
+          }
+        )
+        .then(
+          (data) => {
+            console.log("then3 resolve", data);
+          },
+          (err) => {
+            console.log("then3 reject", err);
+          }
+        );
+
+      let Promise1 = new MyPromise((resolve, reject) => {
+        setTimeout(() => {
+          resolve("Promise1");
+        }, 5000);
+        resolve("Promise2");
+      });
+
+      let Promise2 = new MyPromise((resolve, reject) => {
+        resolve("Promise2");
+      });
+
+      let Promise3 = new MyPromise((resolve, reject) => {
+        resolve("Promise3");
+      });
+
+      let Promise4 = new MyPromise((resolve, reject) => {
+        resolve("Promise4");
+      });
+      let Promise5 = new MyPromise((resolve, reject) => {
+        reject("Promise5");
+      });
+      let Promise6 = new MyPromise((resolve, reject) => {
+        reject("Promise6");
+      });
+
+      let p = MyPromise.all([Promise1, Promise2, Promise3, Promise4]);
+
+      p.then(
+        (res) => {
+          // 三个都成功则成功
+          console.log("all ---成功了", res);
+        },
+        (err) => {
+          console.log("all ---失败了", err);
+        }
+      ).catch((error) => {
+        // 只要有失败，则失败
+        console.log("all ---失败了", err);
+      });
+
+      MyPromise.any([Promise4, Promise5, Promise6])
+        .then(
+          (res) => {
+            // 三个都成功则成功
+            console.log("any 成功了", res);
+          },
+          (err) => {
+            console.log("any 失败了", err);
+          }
+        )
+        .catch((error) => {
+          // 只要有失败，则失败
+          console.log("any 失败了", err);
+        });
+
+      Promise.race([Promise1, Promise2, Promise3]).then(
+        (res) => {
+          console.log("race resolve", res);
+        },
+        (rej) => {
+          console.log("race reject", rej);
+        }
+      );
+
+      let pAll = MyPromise.allSettled([Promise1, Promise2, Promise3, Promise4]);
+
+      pAll.then(
+        (res) => {
+          // 三个都成功则成功
+          console.log("---成功了 allSettled", res);
+        },
+        (err) => {
+          // 只要有失败，则失败
+          console.log("---失败了 allSettled", err);
+        }
+      );
+
+      // 2s 后输出：---成功了 (4) ["Promise1", "Promise2", "Promise3", "Promise4"]
+
+      // 直接输出：---失败了 Promise4
+
+
+```
+
+</Collapse>
+
+
+
+### 6. js bind 实现机制？手写一个 bind 方法？
+
+<Collapse>
+
+
+bind的 作用: **返回一个新的函数，这个新函数在被调用时，其内部的 this 会永久绑定为你指定的对象。**
+
+
+bind 做了三件事：
+
+- 绑定 this：返回一个新的函数，内部的 this 固定为传入的对象；
+- 支持参数预置：可以提前绑定部分参数；
+- 兼容 new 调用：如果用 new 调用 bind 生成的函数，this 绑定失效，应该指向新实例。
+
+
+```js
+// 简单版
+Function.prototype.myBind = function (context) {
+  const fn = this; // 保存原函数
+  return function () {
+    return fn.apply(context);
+  };
+};
+
+// 支持参数传递（柯里化）
+Function.prototype.myBind = function (context, ...args) {
+  const fn = this;
+  return function (...innerArgs) {
+    return fn.apply(context, [...args, ...innerArgs]);
+  };
+};
+
+
+// 考虑 new 构造调用
+Function.prototype.myBind = function (context, ...args) {
+  const fn = this;
+
+  function boundFn(...innerArgs) {
+    // 如果作为构造函数被调用
+    const isNew = this instanceof boundFn;
+    return fn.apply(isNew ? this : context, [...args, ...innerArgs]);
+  }
+
+  // 继承原函数原型
+  boundFn.prototype = Object.create(fn.prototype);
+
+  return boundFn;
+};
+
+```
+
+bind、call、apply: 
+| 特点    | 描述                  |
+| ----- | ------------------- |
+| 功能目标  | 改变函数执行时的 `this` 指向  |
+| 调用对象  | 必须是函数（Function 的实例） |
+| 第一个参数 | 都是要绑定的 `this` 对象    |
+| 后续参数  | 都是函数的参数（但传法不同）      |
+
+
+| 方法                                | 是否立即执行  | 参数传递方式  | 返回值             |
+| --------------------------------- | ------- | ------- | --------------- |
+| **`call(thisArg, ...args)`**      | ✅ 立即执行  | 按参数依次传入 | 函数执行结果          |
+| **`apply(thisArg, [argsArray])`** | ✅ 立即执行  | 数组形式传参  | 函数执行结果          |
+| **`bind(thisArg, ...args)`**      | ❌ 不立即执行 | 按参数依次传入 | **返回新函数**（延迟执行） |
+
+```js
+function greet(g1, g2) {
+  console.log(this.name, g1, g2);
+}
+
+const obj = { name: "Alice" };
+
+greet.call(obj, "Hello", "World");   // Alice Hello World
+greet.apply(obj, ["Hi", "JS"]);      // Alice Hi JS
+const bound = greet.bind(obj, "Hey");
+bound("React");                      // Alice Hey React
+
+```
+
+| 特性        | `call` | `apply` | `bind`      |
+| --------- | ------ | ------- | ----------- |
+| 是否立即执行    | ✅ 是    | ✅ 是     | ❌ 否         |
+| 参数形式      | 单个、多个  | 数组      | 单个、多个       |
+| 返回值       | 执行结果   | 执行结果    | 新函数         |
+| 是否可用作构造函数 | ❌ 否    | ❌ 否     | ✅ 可（支持 new） |
+| 是否能预置参数   | ❌ 否    | ❌ 否     | ✅ 可         |
+| 是否影响原函数   | ❌ 否    | ❌ 否     | ❌ 否         |
+
+应用场景: 
+| 场景           | 使用方法                                             |
+| ------------ | ------------------------------------------------ |
+| 借用其他对象方法     | `Array.prototype.slice.call(arguments)`          |
+| 动态传参         | `fn.apply(obj, [1, 2, 3])`                       |
+| 函数柯里化 / 预置参数 | `fn.bind(obj, 1, 2)`                             |
+| 定时器中固定 this  | `setTimeout(fn.bind(this), 1000)`                |
+| React 组件事件绑定 | `this.handleClick = this.handleClick.bind(this)` |
+
+
+- **call：立刻执行，参数依次传。**
+
+- **apply：立刻执行，参数打包传。**
+
+- **bind：返回函数，稍后执行。**
+
+</Collapse>
+
+
+### 7. 图片查看器
+
+加载、显示、缩放、平移、旋转; 缩略图 / 小地图 / 缩放滑块;
+
+
+<Collapse>
+
+
+| 层级     | 功能模块                      | 描述          |
+| ------ | ------------------------- | ----------- |
+| 🧱 基础层 | **加载、显示、缩放、平移、旋转**        | 图片展示的最小功能集合 |
+| 🧭 导航层 | **缩略图 / 小地图 / 缩放滑块**      | 帮助用户快速定位和缩放 |
+| 🧰 工具层 | **标注、测量、取色、截图、对比**        | 用户交互功能      |
+| 💾 数据层 | **多图层、多通道、切片加载、缓存**       | 支撑大图和多维数据展示 |
+| 🧠 智能层 | **懒加载、GPU 渲染、离屏渲染、预加载预测** | 性能优化和体验提升   |
+| 🧩 扩展层 | **插件体系 / 事件系统 / 定制UI**    | 框架化、工程化能力   |
+
 
 </Collapse>

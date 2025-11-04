@@ -341,6 +341,102 @@ setup() 只执行一次
 | 心智模型   | “每次渲染都是全新的”                        | “状态是持久的，当它变化时自动触发更新”             |
 
 
+</Collapse>
 
+
+### 13. vue3 手写一个once修饰器
+
+<Collapse>
+
+```
+
+<template>
+  <div>
+    <h2 v-once-directive>{{ message }}</h2>
+    <button @click="message = '更新后的消息'">修改 message</button>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+
+const message = ref('初始内容')
+
+// 注册自定义 once 指令
+const vOnceDirective = {
+  // 第一次挂载时（渲染一次）
+  mounted(el, binding) {
+    el._onceContent = el.innerHTML // 记录初次渲染内容
+  },
+  // 当数据变化时，会触发 updated 钩子
+  updated(el, binding) {
+    // 恢复初始内容，防止重新渲染
+    el.innerHTML = el._onceContent
+  }
+}
+</script>
+
+<script>
+export default {
+  directives: {
+    onceDirective: vOnceDirective
+  }
+}
+</script>
+
+```
+
+事件
+```
+
+<template>
+  <button v-once-click="handleClick">点击我一次</button>
+</template>
+
+<script setup>
+const handleClick = () => {
+  alert('只执行一次')
+}
+
+const vOnceClick = {
+  mounted(el, binding) {
+    const fn = (e) => {
+      binding.value(e)
+      el.removeEventListener('click', fn) // 移除监听
+    }
+    el.addEventListener('click', fn)
+  }
+}
+</script>
+
+
+```
+
+自定义指令有很多钩子可以选择
+```vue
+const myDirective = {
+  // 在绑定元素的 attribute 前
+  // 或事件监听器应用前调用
+  created(el, binding, vnode) {
+    // 下面会介绍各个参数的细节
+  },
+  // 在元素被插入到 DOM 前调用
+  beforeMount(el, binding, vnode) {},
+  // 在绑定元素的父组件
+  // 及他自己的所有子节点都挂载完成后调用
+  mounted(el, binding, vnode) {},
+  // 绑定元素的父组件更新前调用
+  beforeUpdate(el, binding, vnode, prevVnode) {},
+  // 在绑定元素的父组件
+  // 及他自己的所有子节点都更新后调用
+  updated(el, binding, vnode, prevVnode) {},
+  // 绑定元素的父组件卸载前调用
+  beforeUnmount(el, binding, vnode) {},
+  // 绑定元素的父组件卸载后调用
+  unmounted(el, binding, vnode) {}
+}
+```
 
 </Collapse>
+
+
