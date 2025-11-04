@@ -1,4 +1,4 @@
-import{_ as i,c as a,o as n,ah as h}from"./chunks/framework.fGi7qB65.js";const g=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"algorithm/index.md","filePath":"algorithm/index.md"}'),k={name:"algorithm/index.md"};function l(p,s,t,e,E,r){return n(),a("div",null,[...s[0]||(s[0]=[h(`<h2 id="算法" tabindex="-1">算法 <a class="header-anchor" href="#算法" aria-label="Permalink to “算法”">​</a></h2><h3 id="_1-换汽水" tabindex="-1">1. 换汽水 <a class="header-anchor" href="#_1-换汽水" aria-label="Permalink to “1. 换汽水”">​</a></h3><p>三个空汽水瓶可以换一瓶汽水，允许向老板借空汽水瓶（但是必须要归还）。小张手上有 n 个空汽水瓶，她想知道自己最多可以喝到多少瓶汽水。</p><div class="language-js"><button title="Copy Code" class="copy"></button><span class="lang">js</span><pre class="shiki shiki-themes github-light github-dark" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e;" tabindex="0" dir="ltr"><code><span class="line"></span>
+import{_ as l,I as t,c as h,o as p,ah as k,J as e,w as r,j as s,a as i}from"./chunks/framework.fGi7qB65.js";const f=JSON.parse('{"title":"","description":"","frontmatter":{},"headers":[],"relativePath":"algorithm/index.md","filePath":"algorithm/index.md"}'),d={name:"algorithm/index.md"};function g(E,n,u,c,y,o){const a=t("Collapse");return p(),h("div",null,[n[1]||(n[1]=k(`<h2 id="算法" tabindex="-1">算法 <a class="header-anchor" href="#算法" aria-label="Permalink to “算法”">​</a></h2><h3 id="_1-换汽水" tabindex="-1">1. 换汽水 <a class="header-anchor" href="#_1-换汽水" aria-label="Permalink to “1. 换汽水”">​</a></h3><p>三个空汽水瓶可以换一瓶汽水，允许向老板借空汽水瓶（但是必须要归还）。小张手上有 n 个空汽水瓶，她想知道自己最多可以喝到多少瓶汽水。</p><div class="language-js"><button title="Copy Code" class="copy"></button><span class="lang">js</span><pre class="shiki shiki-themes github-light github-dark" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e;" tabindex="0" dir="ltr"><code><span class="line"></span>
 <span class="line"><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">function</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;"> maxSodaBottle</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">(</span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;">n</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">, </span><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;">allowBorrow</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;"> =</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> false</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">) {</span></span>
 <span class="line"><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">  if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> (n </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">&lt;</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">return</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">;</span></span>
 <span class="line"><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">  let</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> total </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">=</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> 0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">;</span></span>
@@ -36,4 +36,62 @@ import{_ as i,c as a,o as n,ah as h}from"./chunks/framework.fGi7qB65.js";const g
 <span class="line"></span>
 <span class="line"><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">  loop</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">(n);</span></span>
 <span class="line"><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">  return</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> total;</span></span>
-<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">}</span></span></code></pre></div>`,4)])])}const y=i(k,[["render",l]]);export{g as __pageData,y as default};
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">}</span></span></code></pre></div><h3 id="_2-排序算法" tabindex="-1">2. 排序算法 <a class="header-anchor" href="#_2-排序算法" aria-label="Permalink to “2. 排序算法”">​</a></h3>`,5)),e(a,null,{default:r(()=>[...n[0]||(n[0]=[s("p",null,"排序算法分类:",-1),s("table",{tabindex:"0"},[s("thead",null,[s("tr",null,[s("th",null,"分类"),s("th",null,"特点"),s("th",null,"示例")])]),s("tbody",null,[s("tr",null,[s("td",null,[s("strong",null,"比较类排序")]),s("td",null,"通过比较元素大小确定顺序"),s("td",null,"冒泡、选择、插入、归并、快速、堆排序")]),s("tr",null,[s("td",null,[s("strong",null,"非比较类排序")]),s("td",null,"不通过比较，而是利用桶或计数思想"),s("td",null,"计数排序、桶排序、基数排序")])])],-1),s("p",null,"常见排序算法:",-1),s("ul",null,[s("li",null,"冒泡排序: 相邻元素两两比较，较大的向后“冒泡”")],-1),s("div",{class:"language-"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"}),s("pre",{class:"shiki shiki-themes github-light github-dark",style:{"--shiki-light":"#24292e","--shiki-dark":"#e1e4e8","--shiki-light-bg":"#fff","--shiki-dark-bg":"#24292e"},tabindex:"0",dir:"ltr"},[s("code",null,[s("span",{class:"line"},[s("span")]),i(`
+`),s("span",{class:"line"},[s("span",null,"function bubbleSort(arr) {")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  for (let i = 0; i < arr.length - 1; i++) {")]),i(`
+`),s("span",{class:"line"},[s("span",null,"    for (let j = 0; j < arr.length - 1 - i; j++) {")]),i(`
+`),s("span",{class:"line"},[s("span",null,"      if (arr[j] > arr[j + 1]) {")]),i(`
+`),s("span",{class:"line"},[s("span",null,"        [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];")]),i(`
+`),s("span",{class:"line"},[s("span",null,"      }")]),i(`
+`),s("span",{class:"line"},[s("span",null,"    }")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  }")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  return arr;")]),i(`
+`),s("span",{class:"line"},[s("span",null,"}")])])])],-1),s("p",null,"时间复杂度：O(n²)",-1),s("p",null,"空间复杂度：O(1)",-1),s("p",null,"稳定：✅",-1),s("ul",null,[s("li",null,"选择排序: 每轮选择最小（或最大）值放到前面")],-1),s("div",{class:"language-"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"}),s("pre",{class:"shiki shiki-themes github-light github-dark",style:{"--shiki-light":"#24292e","--shiki-dark":"#e1e4e8","--shiki-light-bg":"#fff","--shiki-dark-bg":"#24292e"},tabindex:"0",dir:"ltr"},[s("code",null,[s("span",{class:"line"},[s("span",null,"function selectionSort(arr) {")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  for (let i = 0; i < arr.length; i++) {")]),i(`
+`),s("span",{class:"line"},[s("span",null,"    let min = i;")]),i(`
+`),s("span",{class:"line"},[s("span",null,"    for (let j = i + 1; j < arr.length; j++) {")]),i(`
+`),s("span",{class:"line"},[s("span",null,"      if (arr[j] < arr[min]) min = j;")]),i(`
+`),s("span",{class:"line"},[s("span",null,"    }")]),i(`
+`),s("span",{class:"line"},[s("span",null,"    [arr[i], arr[min]] = [arr[min], arr[i]];")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  }")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  return arr;")]),i(`
+`),s("span",{class:"line"},[s("span",null,"}")])])])],-1),s("p",null,"时间复杂度：O(n²)",-1),s("p",null,"空间复杂度：O(1)",-1),s("p",null,"稳定：❌（因为交换可能打乱相等元素顺序）",-1),s("ul",null,[s("li",null,"插入排序: 将未排序的元素插入到已排序部分的合适位置")],-1),s("div",{class:"language-"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"}),s("pre",{class:"shiki shiki-themes github-light github-dark",style:{"--shiki-light":"#24292e","--shiki-dark":"#e1e4e8","--shiki-light-bg":"#fff","--shiki-dark-bg":"#24292e"},tabindex:"0",dir:"ltr"},[s("code",null,[s("span",{class:"line"},[s("span",null,"function insertionSort(arr) {")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  for (let i = 1; i < arr.length; i++) {")]),i(`
+`),s("span",{class:"line"},[s("span",null,"    let key = arr[i];")]),i(`
+`),s("span",{class:"line"},[s("span",null,"    let j = i - 1;")]),i(`
+`),s("span",{class:"line"},[s("span",null,"    while (j >= 0 && arr[j] > key) {")]),i(`
+`),s("span",{class:"line"},[s("span",null,"      arr[j + 1] = arr[j];")]),i(`
+`),s("span",{class:"line"},[s("span",null,"      j--;")]),i(`
+`),s("span",{class:"line"},[s("span",null,"    }")]),i(`
+`),s("span",{class:"line"},[s("span",null,"    arr[j + 1] = key;")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  }")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  return arr;")]),i(`
+`),s("span",{class:"line"},[s("span",null,"}")])])])],-1),s("p",null,"时间复杂度：O(n²)，但几乎有序时效率极高",-1),s("p",null,"空间复杂度：O(1)",-1),s("p",null,"稳定：✅",-1),s("ul",null,[s("li",null,"快速排序: 分治思想，选一个“基准”pivot，小的放左，大的放右，然后递归。")],-1),s("div",{class:"language-"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"}),s("pre",{class:"shiki shiki-themes github-light github-dark",style:{"--shiki-light":"#24292e","--shiki-dark":"#e1e4e8","--shiki-light-bg":"#fff","--shiki-dark-bg":"#24292e"},tabindex:"0",dir:"ltr"},[s("code",null,[s("span",{class:"line"},[s("span",null,"function quickSort(arr) {")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  if (arr.length <= 1) return arr;")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  const pivot = arr[arr.length >> 1];")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  const left = arr.filter(x => x < pivot);")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  const mid = arr.filter(x => x === pivot);")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  const right = arr.filter(x => x > pivot);")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  return [...quickSort(left), ...mid, ...quickSort(right)];")]),i(`
+`),s("span",{class:"line"},[s("span",null,"}")])])])],-1),s("p",null,"平均复杂度：O(n log n)",-1),s("p",null,"最坏复杂度：O(n²)（当数组几乎有序时）",-1),s("p",null,"稳定：❌",-1),s("ul",null,[s("li",null,"归并排序: 分治思想，将数组不断二分排序后再合并")],-1),s("div",{class:"language-"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"}),s("pre",{class:"shiki shiki-themes github-light github-dark",style:{"--shiki-light":"#24292e","--shiki-dark":"#e1e4e8","--shiki-light-bg":"#fff","--shiki-dark-bg":"#24292e"},tabindex:"0",dir:"ltr"},[s("code",null,[s("span",{class:"line"},[s("span")]),i(`
+`),s("span",{class:"line"},[s("span",null,"function mergeSort(arr) {")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  if (arr.length <= 1) return arr;")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  const mid = Math.floor(arr.length / 2);")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  const left = mergeSort(arr.slice(0, mid));")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  const right = mergeSort(arr.slice(mid));")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  return merge(left, right);")]),i(`
+`),s("span",{class:"line"},[s("span",null,"}")]),i(`
+`),s("span",{class:"line"},[s("span")]),i(`
+`),s("span",{class:"line"},[s("span",null,"function merge(left, right) {")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  const res = [];")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  while (left.length && right.length) {")]),i(`
+`),s("span",{class:"line"},[s("span",null,"    res.push(left[0] <= right[0] ? left.shift() : right.shift());")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  }")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  return [...res, ...left, ...right];")]),i(`
+`),s("span",{class:"line"},[s("span",null,"}")])])])],-1),s("p",null,"时间复杂度：O(n log n)",-1),s("p",null,"空间复杂度：O(n)",-1),s("p",null,"稳定：✅",-1),s("ul",null,[s("li",null,"计数排序: 非比较类排序，统计每个元素出现次数")],-1),s("div",{class:"language-"},[s("button",{title:"Copy Code",class:"copy"}),s("span",{class:"lang"}),s("pre",{class:"shiki shiki-themes github-light github-dark",style:{"--shiki-light":"#24292e","--shiki-dark":"#e1e4e8","--shiki-light-bg":"#fff","--shiki-dark-bg":"#24292e"},tabindex:"0",dir:"ltr"},[s("code",null,[s("span",{class:"line"},[s("span",null,"function countingSort(arr, maxValue) {")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  const count = new Array(maxValue + 1).fill(0);")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  arr.forEach(v => count[v]++);")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  const res = [];")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  count.forEach((v, i) => { while (v--) res.push(i); });")]),i(`
+`),s("span",{class:"line"},[s("span",null,"  return res;")]),i(`
+`),s("span",{class:"line"},[s("span",null,"}")])])])],-1),s("p",null,"时间复杂度：O(n + k)",-1),s("p",null,"空间复杂度：O(k)",-1),s("p",null,"稳定：✅",-1),s("p",null,"缺点：仅适合整数或离散值范围小的场景",-1),s("table",{tabindex:"0"},[s("thead",null,[s("tr",null,[s("th",null,"场景"),s("th",null,"推荐算法"),s("th",null,"理由")])]),s("tbody",null,[s("tr",null,[s("td",null,"少量数据（<1000）"),s("td",null,"插入 / 冒泡"),s("td",null,"简单实现")]),s("tr",null,[s("td",null,"一般排序（常规数组）"),s("td",null,"快速排序"),s("td",null,"平均性能最好")]),s("tr",null,[s("td",null,"大量数据、稳定性要求"),s("td",null,"归并排序"),s("td",null,"稳定且复杂度稳定")]),s("tr",null,[s("td",null,"数据范围有限、整数"),s("td",null,"计数 / 基数排序"),s("td",null,"非比较类性能高")]),s("tr",null,[s("td",null,"实时排序、流式数据"),s("td",null,"插入排序"),s("td",null,"动态插入效率高")])])],-1)])]),_:1})])}const A=l(d,[["render",g]]);export{f as __pageData,A as default};
