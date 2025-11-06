@@ -106,3 +106,27 @@ Web Worker 的运行环境
 window.localStorage / window.sessionStorage 是 DOM API，属于主线程对象，因此 Worker 里不可访问。
 
 </Collapse>
+
+
+### 6. IndexedDB 可以存什么类型的数据
+
+
+<Collapse>
+
+IndexedDB 是一个“小型对象数据库”,它不像传统数据库那样只能存文本或 JSON，它可以直接存放 复杂 JS 对象、二进制资源、文件流。
+
+| 类别     | 支持 | 示例                                  |
+| ------ | -- | ----------------------------------- |
+| 基础类型   | ✅  | Number, String, Boolean, null       |
+| 对象     | ✅  | Object, Array                       |
+| 日期     | ✅  | Date                                |
+| 正则     | ✅  | /abc/                               |
+| 二进制    | ✅  | Blob, File, ArrayBuffer, TypedArray |
+| 集合     | ✅  | Map, Set                            |
+| 函数     | ❌  | function(){}                        |
+| DOM 节点 | ❌  | document.body                       |
+| Symbol | ❌  | Symbol("x")                         |
+
+
+
+</Collapse>

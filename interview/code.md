@@ -1119,3 +1119,118 @@ bound("React");                      // Alice Hey React
 
 
 </Collapse>
+
+
+### 8.手写 instanceof 方法
+
+<Collapse>
+
+instanceof 运算符用于判断构造函数的 prototype 属性是否出现在对象的原型链中的任何位置。
+
+实现步骤：
+- 首先获取类型的原型
+- 然后获得对象的原型
+- 然后一直循环判断对象的原型是否等于类型的原型，直到对象原型为 null，因为原型链最终为 null
+
+```js
+function myInstanceof(left, right) {
+  let proto = Object.getPrototypeOf(left), // 获取对象的原型
+      prototype = right.prototype; // 获取构造函数的 prototype 对象
+
+  // 判断构造函数的 prototype 对象是否在对象的原型链上
+  while (true) {
+    if (!proto) return false;
+    if (proto === prototype) return true;
+
+    proto = Object.getPrototypeOf(proto);
+  }
+}
+```
+
+</Collapse>
+
+
+### 9. 手写 new 操作符
+
+<Collapse>
+
+
+在调用 new 的过程中会发生以上四件事情：
+
+（1）首先创建了一个新的空对象
+
+（2）设置原型，将对象的原型设置为函数的 prototype 对象。
+
+（3）让函数的 this 指向这个对象，执行构造函数的代码（为这个新对象添加属性）
+
+（4）判断函数的返回值类型，如果是值类型，返回创建的对象。如果是引用类型，就返回这个引用类型的对象。
+
+```js
+
+function myNew(constructor, ...args) {
+  if (typeof constructor !== "function") return
+  let obj = {}
+  obj.prototype = Object.create(constructor.prototype)
+  const res = constructor.apply(obj, args)
+  if (res && (typeof res !== "object" || typeof res === "function")) return res
+  return obj
+}
+function Fn(obj) {
+  this.obj =obj
+}
+let obj =myNew(Fn,'222')
+console.log(obj);
+
+```
+
+</Collapse>
+
+
+### 10.函数柯里化
+
+<Collapse>
+
+柯里化（Currying） 是把一个接受多个参数的函数，转换成一系列每次只接收一个参数的函数。
+
+类比: “一次性买 3 个苹果”，变成 “一次买 1 个，买 3 次，最后结算”。
+
+```
+function add(a, b, c) {
+  return a + b + c;
+}
+
+add(1, 2, 3)  →  curry(add)(1)(2)(3)
+
+curry(add)(1)  // 返回一个函数，等待第二个参数
+
+
+```
+
+好处:
+- ✅ 参数复用（延迟调用）
+
+- ✅ 提高函数复用性、组合性
+
+- ✅ 实现函数“预设参数”（偏函数）
+
+- ✅ 提升代码可读性和函数式风格
+
+
+```js
+
+function curry(fn) {
+  const curried = (...args) => {
+    // 如果参数足够就执行，否则返回新函数继续收集
+    return args.length >= fn.length
+      ? fn(...args)
+      : (...next) => curried(...args, ...next);
+  };
+  return curried;
+}
+
+```
+
+
+
+</Collapse>
+

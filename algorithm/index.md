@@ -210,3 +210,59 @@ function countingSort(arr, maxValue) {
 
 
 </Collapse>
+
+
+### 3. 洗牌算法
+
+<Collapse>
+
+
+```
+function shuffle(array) {
+  let arr = array.slice(); // 拷贝一份，不修改原数组
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1)); // 随机索引 [0, i]
+    [arr[i], arr[j]] = [arr[j], arr[i]]; // 交换
+  }
+  return arr;
+}
+
+```
+
+</Collapse>
+
+
+### 4.字符串出现的不重复最长长度
+
+<Collapse>
+
+我们可以用 双指针（left、right）+ 哈希表（Set 或 Map） 实现：
+
+- 用一个窗口 [left, right) 表示当前不重复子串；
+
+- 向右移动 right 扩大窗口；
+
+- 若遇到重复字符，则移动 left 收缩窗口；
+
+- 过程中记录窗口最大长度。
+
+```js
+function lengthOfLongestSubstring(s) {
+  let set = new Set();
+  let left = 0, maxLen = 0;
+
+  for (let right = 0; right < s.length; right++) {
+    while (set.has(s[right])) {
+      set.delete(s[left]);
+      left++;
+    }
+    set.add(s[right]);
+    maxLen = Math.max(maxLen, right - left + 1);
+  }
+
+  return maxLen;
+}
+
+```
+
+</Collapse>
