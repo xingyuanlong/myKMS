@@ -9,10 +9,11 @@
   
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "vitepress dev",
-    "docs:dev": "vitepress dev",
-    "docs:build": "vitepress build",
-    "docs:preview": "vitepress preview"
+    "generate:questions": "node ./scripts/generate-questions.js",
+    "dev": "pnpm run generate:questions && vitepress dev",
+    "docs:dev": "pnpm run generate:questions && vitepress dev",
+    "docs:build": "pnpm run generate:questions && vitepress build",
+    "docs:preview": "pnpm run generate:questions && vitepress preview"
   },
   "devDependencies": {
     "@vitejs/plugin-vue-jsx": "^5.1.1",

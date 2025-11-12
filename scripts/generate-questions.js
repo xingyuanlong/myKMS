@@ -1,0 +1,203 @@
+#!/usr/bin/env node
+
+const fs = require('fs/promises')
+const path = require('path')
+
+const ROOT = path.resolve(__dirname, '..')
+const SOURCE_DIRS = ['ai', 'algorithm', 'book', 'interview', 'knowledge'].map((dir) =>
+  path.join(ROOT, dir)
+)
+const OUTPUT_FILE = path.join(ROOT, '.vitepress/theme/data/questions.generated.ts')
+
+const SECTION_REGEX = /^###\s+([^\n]+)\n([\s\S]*?)(?=^###\s+|(?![\s\S]))/gm
+const R_CONTROL = /[\u0000-\u001f]/g
+const R_SPECIAL = /[\s~`!@#$%^&*()\-_+=[\]{}|\\;:"'“”‘’<>,.?/]+/g
+const R_COMBINING = /[\u0300-\u036F]/g
+const COLLAPSE_REGEX = /<Collapse>([\s\S]*?)<\/Collapse>/i
+
+async function main() {
+  const markdownFiles = []
+  for (const dir of SOURCE_DIRS) {
+    const exists = await pathExists(dir)
+    if (!exists) continue
+    const files = await collectMarkdownFiles(dir)
+    markdownFiles.push(...files)
+  }
+
+  let nextId = 1
+  const questions = []
+
+  for (const filePath of markdownFiles.sort()) {
+    const relativePath = path.relative(ROOT, filePath)
+    const routePath = '/myKMS/' + relativePath.replace(/\\/g, '/').replace(/\.md$/i, '')
+    const content = await fs.readFile(filePath, 'utf-8')
+    const normalizedContent = content.replace(/\r\n/g, '\n')
+    const sections = extractSections(normalizedContent)
+
+    for (const section of sections) {
+      const collapseContent = extractCollapse(section.body)
+      if (!collapseContent) continue
+
+      const answerBlocks = buildAnswerBlocks(collapseContent)
+      if (!answerBlocks.length) continue
+
+      const questionText = toQuestionText(section.heading)
+      const slug = toSlug(section.heading)
+      const reference = `${routePath}#${slug}`
+
+      questions.push({
+        id: nextId++,
+        question: questionText,
+        answer: answerBlocks,
+        reference,
+        source: routePath
+      })
+    }
+  }
+
+  await writeOutput(questions)
+  console.log(`[generate-questions] collected ${questions.length} question(s).`)
+}
+
+async function pathExists(targetPath) {
+  try {
+    await fs.access(targetPath)
+    return true
+  } catch {
+    return false
+  }
+}
+
+async function collectMarkdownFiles(dir) {
+  const entries = await fs.readdir(dir, { withFileTypes: true })
+  const files = []
+
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name)
+    if (entry.isDirectory()) {
+      const nested = await collectMarkdownFiles(fullPath)
+      files.push(...nested)
+    } else if (entry.isFile() && entry.name.endsWith('.md')) {
+      files.push(fullPath)
+    }
+  }
+
+  return files
+}
+
+function extractSections(content) {
+  SECTION_REGEX.lastIndex = 0
+  const sections = []
+  let match
+  while ((match = SECTION_REGEX.exec(content)) !== null) {
+    sections.push({
+      heading: match[1].trim(),
+      body: match[2].trim()
+    })
+  }
+  return sections
+}
+
+function extractCollapse(sectionBody) {
+  const collapseMatch = sectionBody.match(COLLAPSE_REGEX)
+  if (!collapseMatch) return null
+  return collapseMatch[1].trim()
+}
+
+function buildAnswerBlocks(rawContent) {
+  const lines = rawContent.split('\n')
+  const blocks = []
+  let buffer = []
+  let insideCode = false
+
+  const pushBuffer = () => {
+    if (!buffer.length) return
+    const text = insideCode
+      ? buffer.join('\n').trim()
+      : buffer.join(' ').replace(/\s+/g, ' ').trim()
+    if (text) {
+      blocks.push(text)
+    }
+    buffer = []
+    insideCode = false
+  }
+
+  for (const rawLine of lines) {
+    const line = rawLine.replace(/\r/g, '')
+    const trimmed = line.trim()
+
+    if (trimmed.startsWith('```')) {
+      if (insideCode) {
+        buffer.push(line)
+        pushBuffer()
+      } else {
+        pushBuffer()
+        insideCode = true
+        buffer.push(line)
+      }
+      continue
+    }
+
+    if (insideCode) {
+      buffer.push(line)
+      continue
+    }
+
+    if (!trimmed) {
+      pushBuffer()
+      continue
+    }
+
+    const normalized = normalizeListLine(trimmed)
+    if (normalized) {
+      buffer.push(normalized)
+    }
+  }
+  pushBuffer()
+
+  return blocks
+}
+
+function normalizeListLine(line) {
+  const unorderedMatch = line.match(/^[-*+]\s+(.*)$/)
+  if (unorderedMatch) {
+    return unorderedMatch[1].trim()
+  }
+
+  const orderedMatch = line.match(/^(\d+(?:\.\d+)*)[.)、]?\s+(.*)$/)
+  if (orderedMatch) {
+    return `${orderedMatch[1]}. ${orderedMatch[2].trim()}`
+  }
+
+  return line
+}
+
+function toQuestionText(heading) {
+  return heading.replace(/^\d+[.)、]?\s*/, '').trim() || heading.trim()
+}
+
+function toSlug(heading) {
+  const normalized = heading
+    .normalize('NFKD')
+    .replace(R_COMBINING, '')
+    .replace(R_CONTROL, '')
+    .replace(R_SPECIAL, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/^(\d)/, '_$1')
+    .toLowerCase()
+
+  return normalized || '_section'
+}
+
+async function writeOutput(questionList) {
+  const header = `// This file is auto-generated by scripts/generate-questions.js. Do not edit manually.\nimport type { Question } from './questionTypes'\n\n`
+  const body = `export const questions: Question[] = ${JSON.stringify(questionList, null, 2)}\n`
+  await fs.mkdir(path.dirname(OUTPUT_FILE), { recursive: true })
+  await fs.writeFile(OUTPUT_FILE, header + body, 'utf-8')
+}
+
+main().catch((error) => {
+  console.error('[generate-questions] failed:', error)
+  process.exit(1)
+})
