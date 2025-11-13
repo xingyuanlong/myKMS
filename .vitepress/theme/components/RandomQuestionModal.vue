@@ -36,15 +36,19 @@
             <p class="random-question__question">{{ currentQuestion.question }}</p>
 
             <details
+              v-if="renderedAnswers.length"
               class="random-question__answer"
               :key="detailsKey"
             >
               <summary>展开答案</summary>
-              <ul>
-                <li v-for="(item, index) in currentQuestion.answer" :key="index">
-                  {{ item }}
-                </li>
-              </ul>
+              <div class="random-question__answer-blocks">
+                <div
+                  v-for="(item, index) in renderedAnswers"
+                  :key="index"
+                  class="random-question__answer-block"
+                  v-html="item"
+                />
+              </div>
             </details>
 
             <a
@@ -95,6 +99,8 @@ const triggerClasses = computed(() => [
     'random-question__trigger--nav': variant.value === 'nav'
   }
 ])
+
+const renderedAnswers = computed(() => currentQuestion.value?.answerHtml ?? [])
 
 const getRandomQuestion = (): Question | null => {
   if (!questions.length) {
@@ -175,7 +181,11 @@ const handleReferenceClick = () => {
 }
 
 .random-question__modal {
-  width: min(480px, 100%);
+  width: auto;
+  min-width: min(480px, calc(100% - 2rem));
+  max-width: min(880px, calc(100% - 2rem));
+  max-height: min(85vh, 900px);
+  overflow-y: auto;
   background: #fff;
   border-radius: 1rem;
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
@@ -226,13 +236,46 @@ const handleReferenceClick = () => {
   margin: 0.4rem 0;
 }
 
-.random-question__answer ul {
-  margin: 0;
-  padding-left: 1.2rem;
-  color: #475569;
+.random-question__answer-blocks {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.75rem;
+  color: #475569;
+  font-size: 0.92rem;
+}
+
+.random-question__answer-block :deep(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+  font-size: 0.85rem;
+}
+
+.random-question__answer-block :deep(th),
+.random-question__answer-block :deep(td) {
+  border: 1px solid #e2e8f0;
+  padding: 0.4rem 0.5rem;
+  text-align: left;
+}
+
+.random-question__answer-block :deep(tr:nth-child(2n)) {
+  background: #f8fafc;
+}
+
+.random-question__answer-block :deep(pre) {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 0.6rem;
+  border-radius: 0.4rem;
+  overflow: auto;
+  font-size: 0.8rem;
+}
+
+.random-question__answer-block :deep(code:not(pre code)) {
+  background: #f1f5f9;
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.3rem;
+  font-size: 0.85em;
 }
 
 .random-question__reference {
@@ -280,4 +323,3 @@ const handleReferenceClick = () => {
   box-shadow: none;
 }
 </style>
-

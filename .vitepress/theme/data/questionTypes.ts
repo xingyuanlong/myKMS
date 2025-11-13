@@ -4,4 +4,5 @@ export interface Question {
   answer: string[]
   reference: string
   source: string
+  answerHtml?: string[]
 }

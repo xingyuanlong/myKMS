@@ -2,11 +2,11 @@
 
 const fs = require('fs/promises')
 const path = require('path')
-
 const ROOT = path.resolve(__dirname, '..')
 const SOURCE_DIRS = ['ai', 'algorithm', 'book', 'interview', 'knowledge'].map((dir) =>
   path.join(ROOT, dir)
 )
+const BASE_PATH = '/myKMS'
 const OUTPUT_FILE = path.join(ROOT, '.vitepress/theme/data/questions.generated.ts')
 
 const SECTION_REGEX = /^###\s+([^\n]+)\n([\s\S]*?)(?=^###\s+|(?![\s\S]))/gm
@@ -14,6 +14,7 @@ const R_CONTROL = /[\u0000-\u001f]/g
 const R_SPECIAL = /[\s~`!@#$%^&*()\-_+=[\]{}|\\;:"'“”‘’<>,.?/]+/g
 const R_COMBINING = /[\u0300-\u036F]/g
 const COLLAPSE_REGEX = /<Collapse>([\s\S]*?)<\/Collapse>/i
+let markdownRendererPromise
 
 async function main() {
   const markdownFiles = []
@@ -29,7 +30,7 @@ async function main() {
 
   for (const filePath of markdownFiles.sort()) {
     const relativePath = path.relative(ROOT, filePath)
-    const routePath = '/myKMS/' + relativePath.replace(/\\/g, '/').replace(/\.md$/i, '')
+    const routePath = `${BASE_PATH}/${relativePath.replace(/\\/g, '/').replace(/\.md$/i, '')}`
     const content = await fs.readFile(filePath, 'utf-8')
     const normalizedContent = content.replace(/\r\n/g, '\n')
     const sections = extractSections(normalizedContent)
@@ -41,6 +42,12 @@ async function main() {
       const answerBlocks = buildAnswerBlocks(collapseContent)
       if (!answerBlocks.length) continue
 
+      const answerHtml = []
+      for (const block of answerBlocks) {
+        const rendered = await renderMarkdown(block)
+        answerHtml.push(rendered.trim())
+      }
+
       const questionText = toQuestionText(section.heading)
       const slug = toSlug(section.heading)
       const reference = `${routePath}#${slug}`
@@ -49,6 +56,7 @@ async function main() {
         id: nextId++,
         question: questionText,
         answer: answerBlocks,
+        answerHtml,
         reference,
         source: routePath
       })
@@ -112,14 +120,11 @@ function buildAnswerBlocks(rawContent) {
 
   const pushBuffer = () => {
     if (!buffer.length) return
-    const text = insideCode
-      ? buffer.join('\n').trim()
-      : buffer.join(' ').replace(/\s+/g, ' ').trim()
+    const text = buffer.join('\n').trim()
     if (text) {
       blocks.push(text)
     }
     buffer = []
-    insideCode = false
   }
 
   for (const rawLine of lines) {
@@ -130,6 +135,7 @@ function buildAnswerBlocks(rawContent) {
       if (insideCode) {
         buffer.push(line)
         pushBuffer()
+        insideCode = false
       } else {
         pushBuffer()
         insideCode = true
@@ -148,28 +154,11 @@ function buildAnswerBlocks(rawContent) {
       continue
     }
 
-    const normalized = normalizeListLine(trimmed)
-    if (normalized) {
-      buffer.push(normalized)
-    }
+    buffer.push(line)
   }
   pushBuffer()
 
   return blocks
-}
-
-function normalizeListLine(line) {
-  const unorderedMatch = line.match(/^[-*+]\s+(.*)$/)
-  if (unorderedMatch) {
-    return unorderedMatch[1].trim()
-  }
-
-  const orderedMatch = line.match(/^(\d+(?:\.\d+)*)[.)、]?\s+(.*)$/)
-  if (orderedMatch) {
-    return `${orderedMatch[1]}. ${orderedMatch[2].trim()}`
-  }
-
-  return line
 }
 
 function toQuestionText(heading) {
@@ -188,6 +177,20 @@ function toSlug(heading) {
     .toLowerCase()
 
   return normalized || '_section'
+}
+
+async function renderMarkdown(content) {
+  const renderer = await getMarkdownRenderer()
+  return renderer.render(content)
+}
+
+async function getMarkdownRenderer() {
+  if (!markdownRendererPromise) {
+    markdownRendererPromise = import('vitepress').then(({ createMarkdownRenderer }) =>
+      createMarkdownRenderer(ROOT)
+    )
+  }
+  return markdownRendererPromise
 }
 
 async function writeOutput(questionList) {
