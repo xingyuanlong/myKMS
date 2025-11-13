@@ -204,3 +204,22 @@ main().catch((error) => {
   console.error('[generate-questions] failed:', error)
   process.exit(1)
 })
+
+
+const all=(s) => {
+  const a=s.split('');
+  let arr=[];
+  const loop = (a,s, n=3) => {
+    if (a.length===n) {
+      arr.push(a);
+      return ;
+    }
+    for(let i=s;i<a.length;i++){
+      arr.push(a[i]);
+      loop(arr,i+1);
+      a.pop();
+    }
+  }
+  loop([],0);
+  return arr;
+}
