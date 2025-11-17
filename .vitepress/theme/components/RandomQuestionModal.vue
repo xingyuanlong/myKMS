@@ -5,7 +5,7 @@
       :class="triggerClasses"
       @click="openModal"
     >
-      🎯 随机抽题
+      🎯 随机一题
     </button>
 
     <Teleport to="body">
@@ -20,7 +20,7 @@
           <header class="random-question__header">
             <div>
               <p class="random-question__eyebrow">Interview Drill</p>
-              <h3>随机面试题</h3>
+              <h3>随机一题</h3>
             </div>
             <button
               type="button"

@@ -322,6 +322,53 @@ import-html-entry 默认只处理 index.html 中的静态 script 和 link，所�
 
 </Collapse>
 
+### 7. monorepo 仓库如何控制权限
+
+<Collapse>
+
+因为所有代码都在一个 Git 仓库里，如果不设计好，任何人都能改任何模块，会带来安全、合规和代码质量风险。
+
+| 层级                     | 工具 / 方式                     | 控制能力               | 适合规模     |
+| ---------------------- | --------------------------- | ------------------ | -------- |
+| 1️⃣ Git 层              | CODEOWNERS + 分支保护           | 控制谁能合并哪部分代码        | 小到中型团队   |
+| 2️⃣ CI 层               | Path filter（路径过滤）           | CI 只跑/部署有权限的项目     | 中大型      |
+| 3️⃣ 代码评审层              | Review rule + PR 模板         | 自动要求特定 reviewer 审核 | 中大型      |
+| 4️⃣ Monorepo 管理层       | Nx/Turborepo + Access Rules | 可视化依赖图+权限边界        | 大型团队     |
+| 5️⃣ 组织层（GitHub/GitLab） | Team / Group 权限配置           | 精确到团队目录            | 超大型（多部门） |
+
+
+1. GitHub / GitLab CODEOWNERS 文件
+
+```
+# CODEOWNERS
+/apps/web/*          @frontend-team
+/apps/admin/*        @admin-team
+/packages/utils/*    @core-lib-team
+/packages/api/*      @backend-team
+```
+作用：
+
+触发 PR 时自动要求指定团队审核；
+
+没有通过指定 Reviewer 的批准不能 merge；
+
+搭配 分支保护（Branch Protection Rules） 可强制执行。
+
+✅ 适用：中小团队；简单易行；GitHub/GitLab 都支持。
+
+
+2.Git 平台组织级权限
+
+在 GitHub / GitLab 里：
+
+每个项目路径对应一个 Team（如 frontend, backend, ops）；
+
+给不同路径分配 读/写/审查 权限；
+
+对外协作者仅开放特定子目录（GitLab 支持 Subgroup ACL 更细）。
+
+
+</Collapse>
 
 
 ### 其他

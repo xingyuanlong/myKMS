@@ -83,6 +83,12 @@ Node.js：
 
 - **process.nextTick 优先级高于 Promise 微任务**
 
+```
+[宏任务/事件] → [微任务] → [rAF 回调] → [样式计算/布局/合成/绘制] → [空闲回调/下一轮]
+```
+
+在 rAF 中写样式/改 DOM，浏览器会在同一帧随后进行样式计算与绘制。
+
 </Collapse>
 
 
@@ -221,6 +227,20 @@ ES Module (ESM) 的 import 是编译期就确定依赖关系;ESM 默认是 严�
 - import 端也能感知。ESM 的缓存机制是基于 URL/路径唯一性，并且在 异步上下文中生效。
 - esm缓存生效场景: 同一个模块被多次 import; 循环依赖(缓存的“半成品”也会存起来，这样可以避免死循环);动态 import 多次;
 
+
+import 导入的变量是 活引用（live binding），不是拷贝。
+```js
+// counter.js
+export let count = 0;
+export function inc() { count++; }
+
+// main.js
+import { count, inc } from './counter.js';
+console.log(count); // 0
+inc();
+console.log(count); // 1  ✅ 值会实时变化
+
+```
 </Collapse>
 
 ### 12. 在 JS 代码中避免内存泄漏的方法?
