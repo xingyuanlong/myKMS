@@ -82,7 +82,11 @@
 
 ## 响应系统
 
-1. vue3 响应的核心 proxy 对象, get 收集effect , set 触发effect. 利用weakmap(对象为key, 值为map); 值的map 中 key为响应的字段, value 为 set 收集的响应函数.
+1. vue3 响应的核心 proxy 对象, get 收集effect , set 触发effect. 利用weakmap(对象为key, 值是map); 值的map 中 key为响应的字段, value 为 set 收集的响应函数.
+
+例如: reactive({a:1}) weakmap 会把{a:1} 当做key, 值是map, map 中 key 就是 a , map 的value 就是 proxy 中收集的响应函数. 
+
+Vue3 响应式核心是用 Proxy 拦截 get/set，在 get 时通过一个 `WeakMap<target, Map<key, Set<effect>>>` 的结构做依赖收集，在 set 时根据 target+key 找到对应的 effect 集合并触发执行；外层 WeakMap 让对象可被 GC，内层 Map 的 key 是属性名，value 是依赖这个属性的副作用函数集合，从而实现精准的响应式更新与内存安全
 
 Vue 3 使用一个 任务队列机制 来调度更新任务, 所有响应式更新在一个事件循环中只执行一次, 不会造成多次重复渲染
 

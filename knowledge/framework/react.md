@@ -74,6 +74,8 @@ React Context 用于跨组件共享数据，避免 props 层层传递。其底�
 这种机制保证了 按需更新：只重渲染真正消费 Context 的组件，提高性能。在并发模式下，React 还为每个渲染器维护独立的 currentValue，确保多根树或并发渲染时 Context 值一致。为了避免无效更新，应尽量拆分 Context、用 useMemo 缓存 value，并让消费组件保持细粒度。
 
 
+**setState → Provider 重新 render → 检测到 context value 改变 → 遍历 Fiber 树 + 依赖链，标记相关消费者 → 在这次渲染里重新执行这些组件函数。**
+
 </Collapse>
 
 ### 3. React.memo 原理是啥
@@ -233,6 +235,10 @@ useLayoutEffect（同步执行） 👈 页面还没绘制
         ↓
 useEffect（异步执行） 👈 页面已经绘制
 ```
+
+useLayoutEffect：在“本轮任务内、渲染前”执行（同步，阻塞 paint）。
+
+useEffect：在“本轮渲染后、下一轮任务中”执行（异步，不阻塞 paint）。
 
 </Collapse>
 
@@ -606,7 +612,7 @@ React 的 batchUpdate（批处理更新）机制 是一种优化策略，旨在�
 
 - React 合成事件 如 onClick、onChange 等事件处理函数中的多次状态更新会自动批处理。
 - React 生命周期函数
-- React 18+ 的自动批处理增强 React 18 引入 createRoot 后，即使在异步操作（如 setTimeout、Promise、原生事件回调）中的更新也会自动批处理：
+- React 18+ 的自动批处理增强 React 18 引入 createRoot 后，即使在异步操作（如 setTimeout(同一个 callback 的同步执行阶段)、Promise、原生事件回调）中的更新也会自动批处理：
 
 绕过批处理的场景:
 
@@ -897,6 +903,16 @@ React 渲染分为两阶段：Render 阶段负责根据 props 和 state 生成�
 首次渲染是完整构建 Fiber 树并创建 DOM，更新时只计算需要变更的部分。
 在 React18 并发模式下，Render 阶段可被打断以保证用户交互优先，Commit 阶段始终同步执行
 
+| Hook              | 调用 `useXxx()` 本身 | 你传进去的回调/计算在什么时候跑？                                                | 属于哪个阶段                     |
+| ----------------- | ---------------- | ---------------------------------------------------------------- | -------------------------- |
+| `useState`        | 渲染阶段调用           | 没有额外回调，`setState` 只是排队更新，下次渲染时用新 state                           | **渲染阶段**                   |
+| `useRef`          | 渲染阶段调用           | 没有异步回调，返回的 ref 对象在 render/commit 都可读写                            | 主要是 **渲染阶段** 初始化           |
+| `useMemo`         | 渲染阶段调用           | 计算函数在渲染阶段执行（依赖变才重算），必须纯函数                                        | **渲染阶段**                   |
+| `useCallback`     | 渲染阶段调用           | 只是把函数包起来做依赖比较，没有额外时机                                             | **渲染阶段**                   |
+| `useLayoutEffect` | 渲染阶段注册           | cleanup + effect 回调在 **commit 阶段，同步执行，DOM 更新后、paint 前**          | **提交阶段（layout/pointer 前）** |
+| `useEffect`       | 渲染阶段注册           | cleanup + effect 回调在 **commit 之后的“被动 effect 阶段”，异步执行，不阻塞 paint** | **提交之后（异步 passive 阶段）**    |
+
+
 </Collapse>
 
 ### 21.React 优化
@@ -918,11 +934,109 @@ React 渲染分为两阶段：Render 阶段负责根据 props 和 state 生成�
 
 </Collapse>
 
-### 22.
+### 22. React 时间线
+
 <Collapse>
 
+```js
+
+function Demo() {
+  const [count, setCount] = useState(0)
+
+  const expensiveValue = useMemo(() => {
+    console.log('👀 useMemo compute', count)
+    // 假设这是个很贵的计算
+    let sum = 0
+    for (let i = 0; i < 1e7; i++) sum += i * count
+    return sum
+  }, [count])
+
+  useLayoutEffect(() => {
+    console.log('🏗 layout effect', count, expensiveValue)
+    return () => console.log('🏗 layout cleanup', count, expensiveValue)
+  }, [count, expensiveValue])
+
+  useEffect(() => {
+    console.log('🪄 effect', count, expensiveValue)
+    return () => console.log('🪄 effect cleanup', count, expensiveValue)
+  }, [count, expensiveValue])
+
+  return (
+    <button onClick={() => setCount(c => c + 1)}>
+      {count} - {expensiveValue}
+    </button>
+  )
+}
+
+```
 
 
+```txt
+┌─────────────── 一次“点击触发更新”的完整时间线 ───────────────┐
+
+[宏任务：click 事件回调开始]
+  |
+  |  onClick 触发，调用 setCount(c => c + 1)
+  |  -> React 记录一次 state 更新（放到更新队列）
+  |
+  |-- React render phase（协调阶段，可中断）-----------------
+  |   （开始一次新的渲染）
+  |
+  |   1）执行函数组件 Demo()
+  |        - 调用 useState(...)
+  |          · 读到新的 count（比如 1）
+  |
+  |        - 调用 useMemo(() => { ... }, [count])
+  |          · 检查依赖 [count] 是否改变
+  |          · 如果变了（从 0 -> 1），就在**渲染阶段同步执行**
+  |              console.log('👀 useMemo compute', count)
+  |              进行昂贵计算，得到新的 expensiveValue
+  |          · 如果没变就直接复用上次的结果，不执行工厂函数
+  |
+  |        - 调用 useLayoutEffect(...)
+  |          · 这里只是**注册** layout effect，记录依赖
+  |
+  |        - 调用 useEffect(...)
+  |          · 同样只是**注册** effect，记录依赖
+  |
+  |   2）根据新的 JSX / Fiber 计算出需要的 DOM 变更（diff）
+  |
+  |-- React commit phase（提交阶段，不可中断）---------------
+  |
+  |   3）DOM mutation
+  |        - 按 diff 结果更新 DOM
+  |        - 比如 button 文本从 "0 - 0" → "1 - 49999995000000"
+  |
+  |   4）执行所有需要的 useLayoutEffect cleanup
+  |        - 上一轮渲染中 Demo 的 layout cleanup（如果有）
+  |        - 顺序：按组件树 & 声明顺序
+  |
+  |   5）执行所有新的 useLayoutEffect 回调（同步）
+  |        - console.log('🏗 layout effect', count, expensiveValue)
+  |        - 此时 DOM 已更新，可以安全测量
+  |        - 注意：这里会阻塞当前这一帧的 paint
+  |
+[commit 结束，把控制权还给浏览器]
+  |
+  |-- 浏览器：layout & paint ------------------------------
+  |   - 计算样式布局
+  |   - 把更新后的 DOM 真正画到屏幕上
+  |
+  |-- React flush passive effects（被动 effect 阶段，异步）---
+  |
+  |   6）执行所有需要的 useEffect cleanup
+  |        - 上一轮渲染的 effect cleanup（如果依赖变了）
+  |
+  |   7）执行所有新的 useEffect 回调
+  |        - console.log('🪄 effect', count, expensiveValue)
+  |        - 适合做请求、订阅、日志等
+  |        - 不再影响这次已经画好的这一帧
+  |
+[本轮更新结束]
+
+└────────────────────────────────────────────────────────────┘
+
+```
 
 </Collapse>
 
@@ -1118,6 +1232,17 @@ React 组件每次重新渲染时，在函数体内部定义的对象或数组�
 这个函数调用的返回值是一个 JavaScript 对象（用来描述你想要创建的 UI，也就是 React 元素或“虚拟 DOM”节点）
 
 </Collapse>
+
+
+### 32. react  函数式组件 setSate 会发生什么
+
+<Collapse>
+
+在 React 函数组件里调用 setState 会向当前 hook 的更新队列推入一个更新，并通过调度器批量安排一次重渲染；在下一次 render 阶段，React 会重新执行组件函数，用队列里的所有更新计算出新的 state，生成新的虚拟 DOM，再在 commit 阶段对真实 DOM 做 diff 更新，同时触发对应的 effect，所以当前 render 中的 state 不会立刻变化，变化只会体现在下一次渲染里。
+
+
+</Collapse>
+
 
 
 

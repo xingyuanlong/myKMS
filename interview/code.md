@@ -2,6 +2,9 @@
 
 ### 1. 数组转树
 
+
+<Collapse>
+
 ```js
 const arr = [
   { id: 1, name: "i1" },
@@ -38,6 +41,8 @@ const tree = buildTree(arr);
 console.log(JSON.stringify(tree, null, 2));
 
 ```
+
+</Collapse>
 
 ### 2. 链式调用的任务调度器
 
@@ -1229,8 +1234,6 @@ function curry(fn) {
 }
 
 ```
-
-
 
 </Collapse>
 

@@ -52,6 +52,11 @@ flex: <flex-grow> <flex-shrink> <flex-basis>;
 .item.active { flex: 3; } /* 当前展开项占更多空间 */
 ```
 
+
+flex: 1：“从 0 开始按比例分” → 更像均分 / 填满
+
+flex: auto：“先按内容定底，再按比例分” → 更像自适应内容
+
 </Collapse>
 
 

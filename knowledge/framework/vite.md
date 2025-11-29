@@ -371,6 +371,60 @@ import-html-entry 默认只处理 index.html 中的静态 script 和 link，所�
 </Collapse>
 
 
+### 8. esbuild
+
+<Collapse>
+
+esbuild 是一个用 Go 写的超快前端构建工具，定位是**JavaScript/CSS 的打包器（bundler）+ 转译器（transformer）+ 压缩器（minifier）**，很多工具（Vite、Angular、Rails、Netlify Functions 等）都会把它当作底层加速引擎来用。
+
+运行流程（build 模式）
+
+从入口文件到输出 bundle，大体是这条流水线：
+
+1. 读取入口 entryPoints
+
+2. 解析与扫描（parse/scan）
+
+  - 词法/语法解析生成 AST
+  - 扫描 import/require，收集依赖图（dependency graph）
+
+3. 模块解析（resolve）
+
+  - 根据路径、条件导出、平台（browser/node）等规则定位真实文件
+  -  插件的 onResolve 会在这里介入。
+
+4. 加载与转译（load/transform）
+
+  - 读取源文件
+  - 按 loader 处理 TS/JSX/CSS/JSON/文本等
+  - 插件 onLoad 可以替换/生成内容。
+
+5. 链接/打包（link/bundle）
+
+  - 把依赖图按目标格式拼成一个或多个 chunk
+  - 进行 tree-shaking、作用域提升、代码分割（如开启 splitting）
+
+6. 优化与输出（minify/print）
+
+  - 压缩、变量改写、去空白
+  - 生成 sourcemap
+  - 写入 outdir/outfile 或直接返回内存结果。
+
+transform 模式只走第 2/4/6 的“单文件管线”。
+
+
+为什么 esbuild 特别快？
+- Go 原生实现 + 单体编译器
+- 高度并行（多核）
+- 极少的中间抽象/对象分配
+- 增量构建复用解析结果
+- 功能聚焦（不做 Type Checking）
+
+</Collapse>
+
+
+
+
 ### 其他
 
 - webpack 打包速度分析, speed-measure-webpack-plugin, 打包大小分析: webpack-bundle-analyze

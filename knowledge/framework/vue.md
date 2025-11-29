@@ -26,6 +26,7 @@
 ### 2.Vue 项目可做哪些性能优化
 
 <Collapse>
+
 - 减少不必要的响应式追踪
   - 用 markRaw() 包装不需要响应的对象
   - 使用 shallowReactive / shallowRef 避免深层递归依赖
@@ -112,6 +113,15 @@ Vue 内部维护了多个“任务队列”，它们依次执行：
 
 nextTick 回调 再dom 渲染之后, 宏任务执行之前.
 
+**Vue 3 的 nextTick 本质是：等 Vue 把当前这轮响应式更新、组件渲染、DOM patch 都批量刷完后，再把你的回调放到同一轮 flush 的末尾（一个 microtask）执行。它不是“等一个 tick 的时间”，而是“等更新队列被 flush”。**
+
+
+extTick 什么时候会“马上执行”？
+
+如果你调用 nextTick 时本轮没有任何更新队列：await nextTick() 它会用 resolvedPromise，也就是“下一次 microtask”，几乎立刻执行（但仍然是异步）。
+
+**Vue3 的 nextTick 基于 scheduler：响应式更新会把组件渲染 job 放入队列并用 Promise microtask 安排一次 flush；flushJobs 统一执行 render/patch 后，再执行 postFlush 回调；nextTick 就是返回当前 flush 的 Promise 或在其后追加回调，从而保证拿到更新后的 DOM。**
+
 </Collapse>
 
 ### 4.如何统一监听 Vue 组件报错
@@ -156,6 +166,9 @@ Vue 是 MVVM 模型
 
 <Collapse>
 
+
+**创建实例 → 建响应式 → 执行 setup/初始化状态 → 编译/生成 render → 建立渲染副作用 → 首次 patch → 调用挂载钩子。**
+
 从组件的创建到挂载到页面，再到组件的更新和销毁，每个阶段都有特定的任务和职责。
 
 🎯 组件实例创建：当我们第一次访问页面时，Vue创建组件实例，解析props、data、methods等属性方法，在组合式API中，执行 setup()。
@@ -169,6 +182,8 @@ Vue 是 MVVM 模型
 🎯 响应式更新：状态变更触发 Diff 算法 计算最小 DOM 更新，beforeUpdate、updated（Options API）或 onBeforeUpdate、onUpdated（Composition API）执行相应逻辑。
 
 🎯 组件销毁：移除 DOM，清理副作用（解绑事件、销毁 watcher、清理 effect），递归卸载子组件，触发 beforeUnmount、unmounted（Options API）或 onBeforeUnmount、onUnmounted（Composition API）。
+
+Vue 组件初始化流程是：父组件 patch 时创建子组件实例 → 初始化 props/slots → 执行 setup（或 data/computed/watch 等 Options 初始化）并触发 created → 绑定 render → 建立渲染 effect → 触发 beforeMount → 首次 render 生成 subTree 并 patch 创建 DOM → DOM 插入后触发 mounted，最后跑 post-flush 队列（nextTick 等）。
 
 </Collapse>
 
@@ -275,7 +290,7 @@ Vue 会延迟更新 DOM，等同一轮事件循环中所有状态改动都完成
 | 副作用能力         | 不推荐在 computed 中写副作用（应保持纯函数）                               | 正是用来执行副作用的场景，如异步操作、状态同步、DOM 操作等         |
 | 输入 / 输出       | 通常是同步逻辑，返回值给模板或其他计算使用                                     | 回调可接收新值和旧值，执行任意复杂逻辑                     |
 | 依赖跟踪          | 自动追踪内部访问的响应式变量作为依赖                                        | 明确指定被监听的响应式源（ref / reactive / getter 等） |
-| 是否能监听深层对象 /数组 | 默认浅依赖；对于深层嵌套需要用 `computed(() => JSON.stringify(...))` 等技巧 | 可设置 `deep: true` 监听嵌套属性变化               |
+| 是否能监听深层对象 /数组 | 默认浅依赖；对于深层嵌套需要用 getter 的“被读属性”依赖, 或者 `computed(() => JSON.stringify(...))` 等技巧 | 可设置 `deep: true` 监听嵌套属性变化               |
 | 适合场景          | 计算属性、派生状态、模板绑定等                                           | 异步逻辑、数据拉取、条件触发、清理副作用、观察状态变化等            |
 
 原理:
@@ -295,6 +310,30 @@ LIS 在 Diff 中的作用：找出不需要移动的节点，最小化 DOM 操�
 - 3. 非 LIS 节点移动或创建
     
 能够降低时间复杂度;大型表格、树结构、虚拟列表和移动频繁但大部分节点不变的场景, 效果好.
+
+
+为什么 LIS 能保证“移动最少”？
+
+因为：
+
+ - 递增子序列代表节点在旧列表中的顺序与新列表一致
+ - 任何保持递增顺序的节点集合都可以不动
+ - 其中最长那一个就是“能不动的最大集合”
+
+不动最多 ⇒ 需要移动的就最少。 就是性能最好
+
+
+完整流程大致是：
+
+- 头头比、尾尾比（快路径）
+
+- 建新 key → index map
+
+- 找可复用、标记新增/删除
+
+- 仅在需要移动时算 LIS
+
+- 倒序遍历新节点，做 insert/move
 
 </Collapse>
 
@@ -438,5 +477,20 @@ const myDirective = {
 ```
 
 </Collapse>
+
+
+### 14.vue ref 绑定的值发现改变后, 会发生什么
+
+<Collapse>
+
+**修改了 ref.value → 响应式系统触发依赖 → 调度器把相关副作用（组件渲染、computed、watch）加入队列 → 在本轮 microtask 里统一重新执行 → 重新渲染/patch DOM，触发生命周期钩子。**
+
+
+在 Vue3 里，ref 的 .value 改变后会触发依赖收集到的各类 effect，通过调度器以 microtask 批量重新执行：组件渲染 effect 重新 render 并 patch DOM，相关 computed 失效重算，watch 回调被调用，并在这个过程中按顺序触发 beforeUpdate/updated 和 nextTick，从而完成响应式更新。
+
+</Collapse>
+
+
+
 
 
